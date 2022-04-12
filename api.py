@@ -1,53 +1,53 @@
-from cgi import test
-from flask import Flask
-from flask_restful import Api, Resource, reqparse
-import pandas as pd
-import ast
-
-# Flask initialization
+from hashlib import sha256
+from flask import Flask, Response, request
+# from flask_restful import Api, Resource
+import pymongo
+import json
 app = Flask(__name__)
-api = Api(app)
 
-# Parser setup for multiple uses
-parser = reqparse.RequestParser()
+# Connection with local mongodb
+try:
+    # Mongo connection params
+    mongo = pymongo.MongoClient(
+        host="localhost",
+        port=27017,
+        serverSelectionTimeoutMS = 1000
+    )
+    db = mongo.GlobalStorageDB
+    mongo.server_info()
+# Raise exception if cannot connect
+except:
+    print("ERROR - Cannot connect to db")
 
-# CSV to be upgraded to MongoDB Compass!
-class Users(Resource):
-    # # Reads CSV and returns dict.
-    # def get(self):
-    #     data = pd.read_csv('./data/users.csv')
-    #     data = data.to_dict()
-    #     return {'data':data},200
+# Route setup
+@app.route("/users", methods=["POST"])
 
-    # Creates user
-    def post(self):
+# Create a user on DB
+def create_user():
+    try:
+        # Set user info
+        user = {
+            "userName":str(request.form["userName"]),
+            "userPw":str(request.form["userPw"]),
+            "userPerms":str(request.form["userPerms"]),
+            "userMail":request.form["userMail"]
+        }
+        # Send to DB
+        dbResponse = db.users.insert_one(user)
+        print(dbResponse.inserted_id)
+        # # Print attrs
+        # for attr in dir(dbResponse):
+        #     print(attr)
+        return Response(
+            response=json.dumps(
+                {"message":"user created",
+                "id":f"{dbResponse.inserted_id}"
+                }),
+            status=200,
+            mimetype="application/json"
+        )
+    except Exception as ex:
+        print(ex)
 
-        # Add arguments to parser
-        parser.add_argument('userId', required=True)
-        parser.add_argument('userName', required=True)
-        parser.add_argument('userPw', required=True)
-        parser.add_argument('userPerms', required=True)
-
-        # Creates dataframe with args
-        args = parser.parse_args()
-        new_data = pd.DataFrame([{         #--
-            'userId': args['userId'],      #  | THIS DOESN'T
-            'userName': args['userName'],  #  | WORK WITHOUT
-            'userPw': args['userPw'],      #  | LIST WRAPPING!
-            'userPerms': args['userPerms'] #--
-        }])
-
-        # Reads source file, then returns source file with new data
-        data = pd.read_csv('./data/users.csv')
-        data = data.append(new_data, ignore_index=True)
-        return{'data': data.to_dict()},200
-
-# Add resources to api
-api.add_resource(Users, '/users')
-
-# Ready for takeoff!
-# ##############################################################
-# ##### Don't forget to remove debug=True post development #####
-# ##############################################################
 if __name__ == "__main__":
     app.run(debug=True)
