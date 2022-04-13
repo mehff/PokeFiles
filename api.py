@@ -1,5 +1,5 @@
 from hashlib import sha256
-from flask import Flask, Response, request
+from flask import Flask, Response, request, render_template
 # from flask_restful import Api, Resource
 import pymongo
 import json
@@ -19,18 +19,37 @@ try:
 except:
     print("ERROR - Cannot connect to db")
 
-# Route setup
+# Routes
 @app.route("/users", methods=["POST"])
+@app.route("/")
+@app.route("/about")
 
+def index():
+    return render_template("C:\\Users\\Matheus\\Documents\\GitHub\\GlobalStorage\\app\\templates\\public\\index.html")
+
+def about():
+    return """
+    <h1 style='color: red;'>I'm a red H1 heading!</h1>
+    <p>This is a lovely little paragraph</p>
+    <code>Flask is <em>awesome</em></code>
+    """
 # Create a user on DB
 def create_user():
     try:
+        encInfo = [request.form["userName"], request.form["userPw"], request.form["userPerms"]]
+        print(encInfo)
+        encryptedInfo = []
+        for i in encInfo:
+            print("BARIBERS",type(sha256(str(i).encode('utf8'))))
+            print(encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest()))
+        encryptedInfo.append(request.form["userMail"])
+        print("BLABERS",encryptedInfo)
         # Set user info
         user = {
-            "userName":str(request.form["userName"]),
-            "userPw":str(request.form["userPw"]),
-            "userPerms":str(request.form["userPerms"]),
-            "userMail":request.form["userMail"]
+            "userName":encryptedInfo[0],
+            "userPw":encryptedInfo[1],
+            "userPerms":encryptedInfo[2],
+            "userMail":encryptedInfo[3]
         }
         # Send to DB
         dbResponse = db.users.insert_one(user)
