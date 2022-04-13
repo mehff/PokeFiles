@@ -1,53 +1,92 @@
-from cgi import test
-from flask import Flask
-from flask_restful import Api, Resource, reqparse
-import pandas as pd
-import ast
+from hashlib import sha256
+from flask import Flask, Response, request, render_template, flash
+from wtforms import Form, TextAreaField, TextAreaField, validators
+import pymongo
 
-# Flask initialization
+# App configuration
+DEBUG = True
 app = Flask(__name__)
-api = Api(app)
+app.config.from_object(__name__)
+app.config["SECRET_KEY"] = "f79c49f8cff36434256e56b610824ea695e88b36a23317c61cfdbd8b198b642c"
 
-# Parser setup for multiple uses
-parser = reqparse.RequestParser()
+# MongoDB configuration
+try:
+    # Connection parameters
+    mongo = pymongo.MongoClient(
+        host="localhost",
+        port=27017,
+        serverSelectionTimeoutMS = 1000
+    )
+    db = mongo.GlobalStorageDB
+    mongo.server_info()
 
-# CSV to be upgraded to MongoDB Compass!
-class Users(Resource):
-    # # Reads CSV and returns dict.
-    # def get(self):
-    #     data = pd.read_csv('./data/users.csv')
-    #     data = data.to_dict()
-    #     return {'data':data},200
+# Raise exception if connection fails
+except:
+    print("ERROR: Connection to MongoDB failed")
 
-    # Creates user
-    def post(self):
+# WTForms registration
+class RegistrationForms(Form):
+    username = TextAreaField("Username:", validators=[validators.DataRequired()])
+    password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
+    email = TextAreaField("Email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
 
-        # Add arguments to parser
-        parser.add_argument('userId', required=True)
-        parser.add_argument('userName', required=True)
-        parser.add_argument('userPw', required=True)
-        parser.add_argument('userPerms', required=True)
+# WTForms login
+class LoginForms(Form):
+    username = TextAreaField("Username:", validators=[validators.DataRequired()])
+    password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
+    email = TextAreaField("Email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
 
-        # Creates dataframe with args
-        args = parser.parse_args()
-        new_data = pd.DataFrame([{         #--
-            'userId': args['userId'],      #  | THIS DOESN'T
-            'userName': args['userName'],  #  | WORK WITHOUT
-            'userPw': args['userPw'],      #  | LIST WRAPPING!
-            'userPerms': args['userPerms'] #--
-        }])
+# WTForms confirm email
+class ValidationForm(Form):
+    email = TextAreaField("Confirm your email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
+    validationCode = TextAreaField("Validation code:", validators=[validators.DataRequired()])
 
-        # Reads source file, then returns source file with new data
-        data = pd.read_csv('./data/users.csv')
-        data = data.append(new_data, ignore_index=True)
-        return{'data': data.to_dict()},200
+# Routes
+@app.route("/", methods=["GET", "POST"])
 
-# Add resources to api
-api.add_resource(Users, '/users')
+def regMain():
+    form = RegistrationForms(request.form)
+    print(form.errors)
+    
+    # Only accept POST requests
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        email = request.form["email"]
 
-# Ready for takeoff!
-# ##############################################################
-# ##### Don't forget to remove debug=True post development #####
-# ##############################################################
+        # Validate data passed into forms
+        if form.validate():
+            
+            # Encrypt info and store into DB.
+            # @TODO Encrypt this directly.
+            info = [username, password, email]
+            encryptedInfo = []
+            for i in info:
+                encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
+
+            # Visual indication of success
+            flash('Registration done. ', encryptedInfo)
+
+            # Compose dict with info
+            user = {
+                "username": encryptedInfo[0],
+                "password": encryptedInfo[1],
+                "email": encryptedInfo[2],
+                "perms": 0,
+                }
+            
+            # Send to DB
+            dbResponse = db.users.insert_one(user)
+            dbResponse.inserted_id
+            return render_template('/public/registration.html', form=form)
+
+        # Visual indication of failure
+        else:
+            flash('Error. All form fields are required. ')
+
+    # What to do if it fails
+    return render_template('/public/registration.html', form=form)
+
+# Run app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
