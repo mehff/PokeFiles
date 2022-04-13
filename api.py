@@ -1,9 +1,13 @@
 from hashlib import sha256
-from flask import Flask, Response, request, render_template
-# from flask_restful import Api, Resource
+from flask import Flask, Response, request, render_template, flash
+from wtforms import Form, StringField, TextAreaField, validators, StringField, SubmitField
 import pymongo
 import json
+
+# App config
 app = Flask(__name__)
+app.config.from_object(__name__)
+app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
 
 # Connection with local mongodb
 try:
@@ -21,12 +25,13 @@ except:
 
 # Routes
 @app.route("/users", methods=["POST"])
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 @app.route("/about")
 
 def index():
-    return render_template("C:\\Users\\Matheus\\Documents\\GitHub\\GlobalStorage\\app\\templates\\public\\index.html")
+    return render_template("/public/index.html")
 
+# Render about
 def about():
     return """
     <h1 style='color: red;'>I'm a red H1 heading!</h1>
