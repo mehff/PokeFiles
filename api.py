@@ -9,6 +9,12 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config["SECRET_KEY"] = "f79c49f8cff36434256e56b610824ea695e88b36a23317c61cfdbd8b198b642c"
 
+# perms:
+# 0 : No permissions
+# 1 : Read only
+# 2 : Read and Write
+# 3 : Admin (can change other users' permissions)
+
 # MongoDB configuration
 try:
     # Connection parameters
@@ -17,7 +23,7 @@ try:
         port=27017,
         serverSelectionTimeoutMS = 1000
     )
-    db = mongo.GlobalStorageDB
+    db = mongo.PokeFiles
     mongo.server_info()
 
 # Raise exception if connection fails
@@ -43,7 +49,8 @@ class ValidationForm(Form):
 
 # Routes
 @app.route("/", methods=["GET", "POST"])
-
+  
+# Register user
 def regMain():
     form = RegistrationForms(request.form)
     print(form.errors)
