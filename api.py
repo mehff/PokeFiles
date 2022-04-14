@@ -1,7 +1,9 @@
 from hashlib import sha256
-from flask import Flask, Response, request, render_template, flash
+from flask import Flask, request, Response, render_template, flash, redirect, request
 from wtforms import Form, TextAreaField, TextAreaField, validators
 import pymongo
+import pathlib
+import os
 
 # App configuration
 DEBUG = True
@@ -49,82 +51,24 @@ class ValidationForm(Form):
     email = TextAreaField("Confirm your email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
     validationCode = TextAreaField("Validation code:", validators=[validators.DataRequired()])
 
-# Routes
-@app.route("/", methods=["GET", "POST"])
-@app.route("/home", methods=["GET", "POST"])
-  
-# Register user
-def regMain():
+app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 
-    # Select wtform format
-    form = RegistrationForms(request.form)
-    print(form.errors)
-    
-    # Only accept POST requests
+@app.route("/upload-file", methods = ["GET", "POST"])
+def upload_file():
+
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        email = request.form["email"]
-        name = request.form["name"]
 
-        # Validate data passed into forms
-        if form.validate():
-            
-            # Encrypt info and store into DB.
-            info = [username, password]
-            encryptedInfo = []
-            for i in info:
-                encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
+        if request.files:
 
-            # Compose dict with info
-            user = {
-                "username": encryptedInfo[0],
-                "password": encryptedInfo[1],
-                "email": email,
-                "name": name,
-                "perms": 0,
-                }
-            
-            # Check for duplicity
-            if db.users.find_one({"username": user['username']}):
-                flash("Username taken. Try another one!")
-                return render_template('/public/registration.html', form=form)
+            image = request.files["file"]
 
-            if db.users.find_one({"email": user['email']}):
-                flash("Email already registered! Enter another one.")
-                return render_template("/public/registration.html", form=form)
+            image.save(os.path.join(app.config["FILE_UPLOADS"], image.filename))
 
-            # Send to DB
-            dbResponse = db.users.insert_one(user)
-            dbResponse.inserted_id
+            print("SALVO CARAI")
 
-            # Visual indication of success
-            flash("Registration done. ", encryptedInfo)
-            return render_template("/public/hello.html", form=form)
+            return redirect(request.url)
 
-        # Visual indication of failure
-        else:
-            flash("Error! All form fields are required. ")
-
-    # What to do if it fails
-    return render_template("/public/registration.html", form=form)
-
-def loginPage():
-
-    # Select wtform format
-    form = LoginForms(request.form)
-    username = request.form("username")
-    password = request.form("password")
-
-    # Validate form requirements
-    if form.validate():
-        user = db.users.find_one({
-            "username":username,
-            "password":password
-        })
-        if user:
-            return print("AAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH")
-        return render_template("/public/registration.html")
+    return render_template("public/uploads.html")
 
 # Run app
 if __name__ == "__main__":
