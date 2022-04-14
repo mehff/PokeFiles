@@ -53,6 +53,7 @@ class ValidationForm(Form):
 
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 
+# Upload files
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():
 
@@ -60,15 +61,92 @@ def upload_file():
 
         if request.files:
 
-            image = request.files["file"]
+            files = request.files.getlist("file")
 
-            image.save(os.path.join(app.config["FILE_UPLOADS"], image.filename))
+            for file in files:
+                file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
 
             print("SALVO CARAI")
 
             return redirect(request.url)
 
     return render_template("public/uploads.html")
+
+# Register user
+@app.route("/", methods = ["GET", "POST"])
+def regMain():
+
+    # Select wtform format
+    form = RegistrationForms(request.form)
+    print(form.errors)
+    
+    # Only accept POST requests
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        email = request.form["email"]
+        name = request.form["name"]
+
+        # Validate data passed into forms
+        if form.validate():
+            
+            # Encrypt info and store into DB.
+            info = [username, password]
+            encryptedInfo = []
+            for i in info:
+                encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
+
+            # Compose dict with info
+            user = {
+                "username": encryptedInfo[0],
+                "password": encryptedInfo[1],
+                "email": email,
+                "name": name,
+                "perms": 0,
+                }
+            
+            # Check for duplicity
+            if db.users.find_one({"username": user['username']}):
+                flash("Username taken. Try another one!")
+                return render_template('/public/registration.html', form=form)
+
+            if db.users.find_one({"email": user['email']}):
+                flash("Email already registered! Enter another one.")
+                return render_template("/public/registration.html", form=form)
+
+            # Send to DB
+            dbResponse = db.users.insert_one(user)
+            dbResponse.inserted_id
+
+            # Visual indication of success
+            flash("Registration done. ", encryptedInfo)
+            return render_template("/public/hello.html", form=form)
+
+        # Visual indication of failure
+        else:
+            flash("Error! All form fields are required. ")
+
+    # What to do if it fails
+    return render_template("/public/registration.html", form=form)
+
+# Login user
+@app.route("/", methods = ["GET", "POST"])
+def loginPage():
+
+    # Select wtform format
+    form = LoginForms(request.form)
+    username = request.form("username")
+    password = request.form("password")
+
+    # Validate form requirements
+    if form.validate():
+        user = db.users.find_one({
+            "username":username,
+            "password":password
+        })
+        if user:
+            return print("AAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH")
+        return render_template("/public/login.html")
 
 # Run app
 if __name__ == "__main__":
