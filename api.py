@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config["SECRET_KEY"] = "f79c49f8cff36434256e56b610824ea695e88b36a23317c61cfdbd8b198b642c"
 
-# basic info
+# Basic info
 
 # perms:
 # 0 : No permissions
