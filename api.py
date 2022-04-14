@@ -9,6 +9,8 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config["SECRET_KEY"] = "f79c49f8cff36434256e56b610824ea695e88b36a23317c61cfdbd8b198b642c"
 
+# basic info
+
 # perms:
 # 0 : No permissions
 # 1 : Read only
@@ -35,12 +37,12 @@ class RegistrationForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
     password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
     email = TextAreaField("Email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
+    email = TextAreaField("Name:", validators=[validators.DataRequired()])
 
 # WTForms login
 class LoginForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
     password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
-    email = TextAreaField("Email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
 
 # WTForms confirm email
 class ValidationForm(Form):
@@ -49,9 +51,12 @@ class ValidationForm(Form):
 
 # Routes
 @app.route("/", methods=["GET", "POST"])
+@app.route("/home", methods=["GET", "POST"])
   
 # Register user
 def regMain():
+
+    # Select wtform format
     form = RegistrationForms(request.form)
     print(form.errors)
     
@@ -60,39 +65,66 @@ def regMain():
         username = request.form["username"]
         password = request.form["password"]
         email = request.form["email"]
+        name = request.form["name"]
 
         # Validate data passed into forms
         if form.validate():
             
             # Encrypt info and store into DB.
-            # @TODO Encrypt this directly.
-            info = [username, password, email]
+            info = [username, password]
             encryptedInfo = []
             for i in info:
                 encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
-
-            # Visual indication of success
-            flash('Registration done. ', encryptedInfo)
 
             # Compose dict with info
             user = {
                 "username": encryptedInfo[0],
                 "password": encryptedInfo[1],
-                "email": encryptedInfo[2],
+                "email": email,
+                "name": name,
                 "perms": 0,
                 }
             
+            # Check for duplicity
+            if db.users.find_one({"username": user['username']}):
+                flash("Username taken. Try another one!")
+                return render_template('/public/registration.html', form=form)
+
+            if db.users.find_one({"email": user['email']}):
+                flash("Email already registered! Enter another one.")
+                return render_template("/public/registration.html", form=form)
+
             # Send to DB
             dbResponse = db.users.insert_one(user)
             dbResponse.inserted_id
-            return render_template('/public/registration.html', form=form)
+
+            # Visual indication of success
+            flash("Registration done. ", encryptedInfo)
+            return render_template("/public/hello.html", form=form)
 
         # Visual indication of failure
         else:
-            flash('Error. All form fields are required. ')
+            flash("Error! All form fields are required. ")
 
     # What to do if it fails
-    return render_template('/public/registration.html', form=form)
+    return render_template("/public/registration.html", form=form)
+
+def loginPage():
+
+    # Select wtform format
+    form = LoginForms(request.form)
+    username = request.form("username")
+    password = request.form("password")
+
+    # Validate form requirements
+    if form.validate():
+        user = db.users.find_one({
+            "username":username,
+            "password":password
+        })
+        if user:
+            return print("AAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH")
+        return render_template("/public/registration.html")
 
 # Run app
 if __name__ == "__main__":
