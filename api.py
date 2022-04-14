@@ -1,7 +1,9 @@
 from hashlib import sha256
-from flask import Flask, Response, request, render_template, flash
+from flask import Flask, request, Response, render_template, flash, redirect, request
 from wtforms import Form, TextAreaField, TextAreaField, validators
 import pymongo
+import pathlib
+import os
 
 # App configuration
 DEBUG = True
@@ -49,11 +51,29 @@ class ValidationForm(Form):
     email = TextAreaField("Confirm your email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
     validationCode = TextAreaField("Validation code:", validators=[validators.DataRequired()])
 
-# Routes
-@app.route("/", methods=["GET", "POST"])
-@app.route("/home", methods=["GET", "POST"])
-  
+app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
+
+# Upload files
+@app.route("/upload-file", methods = ["GET", "POST"])
+def upload_file():
+
+    if request.method == "POST":
+
+        if request.files:
+
+            files = request.files.getlist("file")
+
+            for file in files:
+                file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
+
+            print("SALVO CARAI")
+
+            return redirect(request.url)
+
+    return render_template("public/uploads.html")
+
 # Register user
+@app.route("/", methods = ["GET", "POST"])
 def regMain():
 
     # Select wtform format
@@ -109,6 +129,8 @@ def regMain():
     # What to do if it fails
     return render_template("/public/registration.html", form=form)
 
+# Login user
+@app.route("/", methods = ["GET", "POST"])
 def loginPage():
 
     # Select wtform format
@@ -124,7 +146,7 @@ def loginPage():
         })
         if user:
             return print("AAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH")
-        return render_template("/public/registration.html")
+        return render_template("/public/login.html")
 
 # Run app
 if __name__ == "__main__":
