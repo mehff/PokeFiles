@@ -99,6 +99,7 @@ def upload_file():
 def regMain():
 
     print(session,"SOU SESSION")
+
     # Select wtform format
     form = RegistrationForms(request.form)
     print(form.errors)
@@ -106,20 +107,22 @@ def regMain():
     # Only accept POST requests
     if request.method == "POST":
 
+        print("REG IF")
         # print(session)
         # if session:
         #     flash("You already have a account! Wanna login now?")
         #     return render_template("/public/login.html", form=form)
         try:
-
+            print("REG TRY")
             username = request.form["username"]
             password = request.form["password"]
             email = request.form["email"]
             name = request.form["name"]
+            print(username, password, email, name)
 
             # Validate data passed into forms
             if form.validate():
-                
+                print("REG TRY IF")
                 # Encrypt info and store into DB.
                 info = [username, password]
                 encryptedInfo = []
@@ -134,13 +137,15 @@ def regMain():
                     "name": name,
                     "perms": 0,
                     }
-                
+                print(user["username"], user["password"], user["email"], user["name"], user["perms"], "AAAAAAAAAAAAAAAAAAAAAAAAAAA")
                 # Check for duplicity
                 if db.users.find_one({"username": user['username']}):
                     flash("Username taken. Try another one!")
+                    print("QUEIJO")
                     return render_template('/public/newuser.html', form=form)
 
                 if db.users.find_one({"email": user['email']}):
+                    print("ARCARAIO")
                     flash("Email already registered! Enter another one.")
                     return render_template("/public/newuser.html", form=form)
 
@@ -150,10 +155,12 @@ def regMain():
 
                 # Visual indication of success
                 flash("Registration done. ", encryptedInfo)
+                print("REQUEIJÃO")
                 return render_template("/public/login.html", form=form)
             # Visual indication of failure
             else:
-                flash("Error! All form fields are required. ", "error")
+                print("ELSE!!!!")
+                flash("Error! All form fields are required. ", form=form)
         except:
             flash("Error! Password and Email must have at least 6 characters. ", "error")
             return render_template("/public/newuser.html", form=form)
@@ -163,12 +170,12 @@ def regMain():
 # First page
 @app.route("/", methods = ["GET", "POST"])
 def homePage():
-
+    print("UÉ?")
     # Select wtforms format
     form = RegistrationForms(request.form)
 
     # And render the newuser landing page
-    return render_template("/public/newuser.html", form=form)
+    return render_template("/public/landing.html", form=form)
 
 
 # Login user
