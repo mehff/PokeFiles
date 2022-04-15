@@ -1,0 +1,36 @@
+</div><title>Hello PokeFiles</title>
+<div class="container">
+    <h2>Hello PokeFiles</h2>
+    <form action="/newuser" method="POST">
+        <button>REGISTER</button>
+    </form>
+    <form action="/login" method="post" role="form">
+        <div class="form-group">
+            <label for="name">Username:</label>
+            <input type="username" class="form-control" id="username" name="username" placeholder="Your username.">
+            
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Your password.">
+        </div>
+        <button type="submit" class="btn btn-success">Sign Up</button>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for message in messages %}
+    {% if "Error" not in message[1]: %}
+    <div class="alert alert-info">
+        <strong>Success!</strong>
+        {{ message[1] }}
+    </div>
+    {% endif %}
+    
+    {% if "Error" in message[1]: %}
+    <div class="alert alert-warning">
+        {{ message[1] }}
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    
+</div>
