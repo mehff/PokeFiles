@@ -1,9 +1,10 @@
 from hashlib import sha256
-from flask import Flask, request, Response, render_template, flash, redirect, request
-from wtforms import Form, TextAreaField, TextAreaField, validators
+from flask import Flask, request, Response, render_template, flash, redirect, request, jsonify
+from wtforms import Form, TextAreaField, TextAreaField, validators, FileField
 import pymongo
 import pathlib
 import os
+import pprint
 
 # App configuration
 DEBUG = True
@@ -34,6 +35,9 @@ try:
 except:
     print("ERROR: Connection to MongoDB failed")
 
+# Session
+session = {}
+
 # WTForms registration
 class RegistrationForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
@@ -51,33 +55,50 @@ class ValidationForm(Form):
     email = TextAreaField("Confirm your email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
     validationCode = TextAreaField("Validation code:", validators=[validators.DataRequired()])
 
+# WTForms files
+class FilesForm(Form):
+    files = FileField("Upload files:", validators=[validators.DataRequired()])
+
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 
 # Upload files
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():
-
+    
+    # If request method is POST
     if request.method == "POST":
+        
+        # Select wtforms method
+        form = FilesForm(request.form)
+
         try:
-
+            
             if request.files:
-
+                
                 files = request.files.getlist("file")
 
                 for file in files:
                     file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
 
-                print("SALVO CARAI")
+                return render_template("public/uploads.html", form=form)
 
-                return redirect(request.url)
-
+            else:
+                
+                return render_template("public/uploads.html", form=form)
         except:
-            return render_template("public/uploads.html")
+
+            # If there's no files to upload
+            return render_template("public/uploads.html", form=form)
+
+    else:
+        # If user tries to upload without being logged in
+        return render_template("public/denied.html")
 
 # Register user
 @app.route("/newuser", methods = ["GET", "POST"])
 def regMain():
 
+    print(session,"SOU SESSION")
     # Select wtform format
     form = RegistrationForms(request.form)
     print(form.errors)
@@ -85,8 +106,12 @@ def regMain():
     # Only accept POST requests
     if request.method == "POST":
 
+        # print(session)
+        # if session:
+        #     flash("You already have a account! Wanna login now?")
+        #     return render_template("/public/login.html", form=form)
         try:
-            print("WHAT")
+
             username = request.form["username"]
             password = request.form["password"]
             email = request.form["email"]
@@ -128,8 +153,9 @@ def regMain():
                 return render_template("/public/login.html", form=form)
             # Visual indication of failure
             else:
-                flash("Error! All form fields are required. ")
+                flash("Error! All form fields are required. ", "error")
         except:
+            flash("Error! Password and Email must have at least 6 characters. ", "error")
             return render_template("/public/newuser.html", form=form)
 
     # What to do if it fails
@@ -137,7 +163,11 @@ def regMain():
 # First page
 @app.route("/", methods = ["GET", "POST"])
 def homePage():
+
+    # Select wtforms format
     form = RegistrationForms(request.form)
+
+    # And render the newuser landing page
     return render_template("/public/newuser.html", form=form)
 
 
@@ -145,32 +175,45 @@ def homePage():
 @app.route("/login", methods = ["GET", "POST"])
 def loginPage():
 
-    form = LoginForms(request.form)
-    print(form.errors)
-
+    # Only accept POST
     if request.method == "POST":
+        # Select WTForms format
+        form = LoginForms(request.form)
+        print(form.errors)
 
         try:
             username = request.form["username"]
             password = request.form["password"]
-            # Encrypt info and store into DB.
 
+            # Encrypt info and store into DB.
             info = [username, password]
             encryptedInfo = []
             for i in info:
                     encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
 
+            # Set user
             user = {"username": encryptedInfo[0], "password": encryptedInfo[1]}
 
-            if db.users.find_one({"username":user["username"], "password":user["password"]}):
-                print("AAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHH")
-                return render_template("/public/login.html", form=form)
+            # Find user in db
+            data = db.users.find_one({"username":user["username"], "password":user["password"]})
+
+            # Store values in session
+            for key, value in data.items():
+                session.update({key: value})
+
+            # If db query returns True
+            if data:
+
+                # Visual indication of success
+                flash("Logged in successfully")
+
+                # Render user's userarea
+                return render_template("/public/userarea.html", form=form)
                 
-            print("JESUS CRISTO DEU CERTO\n", username, password)
-            return render_template("/public/login.html", form=form)
-        
         except:
-            print("OPS!!!!!!!!!!!!")
+
+            # Visual indication of failure
+            flash("Login or password incorrect")
             return render_template("/public/login.html", form=form)
     
     else:
