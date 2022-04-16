@@ -61,6 +61,11 @@ class FilesForm(Form):
 
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 
+# User area
+@app.route("/userarea", methods=["GET", "POST"])
+def userArea():
+    return render_template("/public/userarea.html")
+
 # Upload files
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():

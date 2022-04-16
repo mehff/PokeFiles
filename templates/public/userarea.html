@@ -4,6 +4,9 @@
     <form action="/upload-file" method="POST">
         <button>UPLOAD STUFF</button>
     </form>
+    {% for i in session %}
+        {%i%}
+    {% endfor %}
     <form action="/login" method="post" role="form">
         <div class="form-group">
             <label for="name">Username:</label>
