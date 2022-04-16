@@ -117,7 +117,7 @@ def regMain():
         # if session:
         #     flash("You already have a account! Wanna login now?")
         #     return render_template("/public/login.html", form=form)
-        try:
+        if username == request.form["username"]:
             print("REG TRY")
             username = request.form["username"]
             password = request.form["password"]
@@ -166,9 +166,9 @@ def regMain():
             else:
                 print("ELSE!!!!")
                 flash("Error! All form fields are required. ", form=form)
-        except:
-            flash("Error! Password and Email must have at least 6 characters. ", "error")
-            return render_template("/public/newuser.html", form=form)
+        # except:
+        #     flash("Error! Password and Email must have at least 6 characters. ", "error")
+        #     return render_template("/public/newuser.html", form=form)
 
     # What to do if it fails
 
@@ -182,6 +182,12 @@ def homePage():
     # And render the newuser landing page
     return render_template("/public/landing.html", form=form)
 
+# Login page
+@app.route("/loginPage", methods = ["GET", "POST"])
+def getLogin():
+    form = LoginForms(request.form)
+    return render_template("/public/login.html", form=form)
+
 
 # Login user
 @app.route("/login", methods = ["GET", "POST"])
@@ -191,7 +197,6 @@ def loginPage():
     if request.method == "POST":
         # Select WTForms format
         form = LoginForms(request.form)
-        print(form.errors)
 
         try:
             username = request.form["username"]
@@ -227,10 +232,6 @@ def loginPage():
             # Visual indication of failure
             flash("Login or password incorrect")
             return render_template("/public/login.html", form=form)
-    
-    else:
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        return render_template("/public/login.html", form=form)
 
 # Run app
 if __name__ == "__main__":
