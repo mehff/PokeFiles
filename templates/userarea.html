@@ -1,0 +1,15 @@
+</div><title>My PokeFiles</title>
+<div class="container">
+    <h2>{{session["name"]|capitalize}}'s PokeFiles</h2>
+    <form action="/upload-file" method="POST">
+        <button>UPLOAD STUFF</button>
+    </form>
+    <form action="/downloads" method="POST">
+        <button>DOWNLOAD STUFF</button>
+    </form>
+    {% for k, v in session.items() %}
+    <div>
+        {{k, v}}
+    </div>
+    {% endfor %}
+</div>

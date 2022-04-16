@@ -1,0 +1,7 @@
+<h1>Download File</h1>
+<form action="/userarea" method="POST">
+    <button>USER AREA</button>
+</form>
+{% for File in pathList %}
+    <a href="{{url_for ('downloadfile', filename = File)}}" download="">{{File}}</a>
+{% endfor %}
