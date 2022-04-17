@@ -1,7 +1,11 @@
-<h1>Upload File</h1>
+<h2>{{session["name"]|capitalize}}'s PokeFiles</h2>
 <form action="/userarea" method="POST">
     <button>USER AREA</button>
 </form>
+<form action="/logout" method="POST">
+    <button>LOGOUT</button>
+</form>
+<h2>Upload File</h2>
 <form action = "/upload-file" method = "POST" enctype = "multipart/form-data">
     <div class = "custom-file">
         <input type="file" name = "file" id = "file" multiple = "true" />

@@ -9,3 +9,8 @@
         <button>LOGIN</button>
     </form>
 </div>
+{% for k, v in session.items() %}
+<div>
+    {{k, v}}
+</div>
+{% endfor %}
