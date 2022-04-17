@@ -14,10 +14,10 @@ app.config["SECRET_KEY"] = "f79c49f8cff36434256e56b610824ea695e88b36a23317c61cfd
 # Basic info
 
 # perms:
-# 0 : No permissions
-# 1 : Read only
-# 2 : Read and Write
-# 3 : Admin (can change other users' permissions)
+# 0 : Download only
+# 1 : Download and Upload
+# 2 : Download, Upload and Delete
+# 3 : Download, Upload and change others' perms
 
 # MongoDB configuration
 try:
@@ -76,63 +76,85 @@ def logout():
 # Upload files
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():
-    
-    # If request method is POST
-    if request.method == "POST":
-        
-        # Select wtforms method
-            form = FilesForm(request.form)
 
-            try:
+    try:
+        if session["perms"] >= 1:
+        # If request method is POST
+            if request.method == "POST":
                 
-                if request.files:
-                    
-                    files = request.files.getlist("file")
+                # Select wtforms method
+                    form = FilesForm(request.form)
 
-                    for file in files:
-                        file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
+                    try:
+                        
+                        if request.files:
+                            
+                            files = request.files.getlist("file")
 
-                    return render_template("uploads.html", form=form, session=session)
+                            for file in files:
+                                file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
 
-                else:
-                    
-                    return render_template("uploads.html", form=form, session=session)
-            except:
+                            return render_template("uploads.html", form=form, session=session)
 
-                # If there's no files to upload
-                return render_template("uploads.html", form=form, session=session)
+                        else:
+                            
+                            return render_template("uploads.html", form=form, session=session)
+                    except:
+
+                        # If there's no files to upload
+                        return render_template("uploads.html", form=form, session=session)
+        else:
+            return render_template("denied.html", session={})
+    except:
+        return render_template("denied.html", session={})
 
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
-    filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
+    try:
+        if session["perms"]:
+            filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
 
-    pathList = []
+            pathList = []
 
-    for i in filenames:
-        pathList.append(i)
-    return render_template("downloads.html", session=session, pathList=pathList)
+            for i in filenames:
+                pathList.append(i)
+            return render_template("downloads.html", session=session, pathList=pathList)
+    except:
+        return render_template("denied.html", session={})
 
 # Download file
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
 def downloadfile(filename):
-    uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
-    return send_from_directory(uploads, filename, as_attachment=True)
+    try:
+        if session["perms"]:
+            uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
+            return send_from_directory(uploads, filename, as_attachment=True)
+        else:
+            return render_template("denied.html", session={})
+    except:
+        return render_template("denied.html", session={})
 
 # Remove file
 @app.route("/downloads/delete/<path:deletefilename>", methods=["GET", "POST"])
 def deletefile(deletefilename):
-    uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
-    os.remove(uploads+"/"+deletefilename)
+    try:
+        if session["perms"] >= 2:
 
-    filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
+            uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
+            os.remove(uploads+"/"+deletefilename)
 
-    pathList = []
+            filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
 
-    for i in filenames:
-        pathList.append(i)
-    return render_template("downloads.html", session=session, pathList=pathList)
+            pathList = []
 
+            for i in filenames:
+                pathList.append(i)
+                return render_template("downloads.html", session=session, pathList=pathList)
+        else:
+            return render_template("denied.html", session={})
+    except:
+        return render_template("denied.html", session={})
 # Register user
 @app.route("/newuser", methods = ["GET", "POST"])
 def regMain():
@@ -143,6 +165,7 @@ def regMain():
     # Only accept POST requests
     if request.method == "POST":
 
+        # Check if request has the info needed
         try:
             username = request.form["username"]
             password = request.form["password"]
@@ -151,8 +174,10 @@ def regMain():
             
         except:
             return render_template("/newuser.html", form=form)
+
         # Validate data passed into forms
         if form.validate():
+
             # Encrypt info and store into DB.
             info = [username, password]
             encryptedInfo = []
@@ -168,7 +193,7 @@ def regMain():
                 "perms": 0,
                 }
                 
-                # Check for duplicity
+            # Check for duplicity
             if db.users.find_one({"username": user['username']}):
                 flash("Username taken. Try another one!")
                 return render_template('/newuser.html', form=form)
@@ -182,7 +207,6 @@ def regMain():
             dbResponse.inserted_id
 
             # Visual indication of success
-            flash("Registration done. ", encryptedInfo)
             return render_template("/login.html", form=form)
             
         else:
@@ -193,6 +217,7 @@ def regMain():
 # First page
 @app.route("/", methods = ["GET", "POST"])
 def homePage():
+
     # Select wtforms format
     form = RegistrationForms(request.form)
 
@@ -215,6 +240,7 @@ def loginPage():
         # Select WTForms format
         form = LoginForms(request.form)
 
+        # Check if form has info
         try:
             username = request.form["username"]
             password = request.form["password"]
@@ -223,7 +249,7 @@ def loginPage():
             # Render page
             return render_template("/login.html", form=form)
 
-        # Encrypt info and store into DB.
+        # Encrypt info and store into DB
         info = [username, password]
         encryptedInfo = []
 
@@ -234,21 +260,20 @@ def loginPage():
         user = {"username": encryptedInfo[0], "password": encryptedInfo[1]}
         
         try:
+
             # Find user in db
             data = db.users.find_one({"username":user["username"], "password":user["password"]})
         except:
+
+            # Visual indication of error
             flash("User not found!")
             return render_template("/login.html", form=form)
 
-        try:
-            # Store values in session
-            for key, value in data.items():
-                session.update({key: value})
-
-        except:
-            flash("OMEUDEUS")
-            return render_template("/login.html", form=form)
-
+        # Store values in session
+        for key, value in data.items():
+            session.update({key: value})
+            
+        # Check if session is unpopulated (first access)
         if len(session) == 0:
             return render_template("/login.html", form=form)
 
@@ -256,21 +281,14 @@ def loginPage():
             # If db query returns True
             if data.items() == session.items():
 
-                # Visual indication of success
-                flash("Logged in successfully!!")
                 # Render user's userarea
                 return render_template("/userarea.html", session=session)
 
             else:
                 # Visual indication of failure
                 flash("Login or password incorrect")
-        flash("W H A T")
+
         return render_template("/login.html", form=form)
-
-        # except:
-
-        #     # Render page
-        #     return render_template("/login.html", form=form)
 
 # Run app
 if __name__ == "__main__":
