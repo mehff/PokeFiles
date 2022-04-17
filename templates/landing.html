@@ -1,11 +1,13 @@
-</div><title>Landing PokeFiles</title>
+<title>Landing PokeFiles</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
 <div class="container">
-    <h2>Landing PokeFiles</h2>
-    <a>Want to create a account or to login?</a>
+    <h2 class="titulo">Welcome to PokeFiles!</h2>
+    <p class="join">Want to create an account?</p>
     <form action="/newuser" method="POST">
-        <button>REGISTER</button>
+        <button>Register</button>
     </form>
+    <p class="join">Already have an account?</p>
     <form action="/loginPage" method="POST">
-        <button>LOGIN</button>
+        <button>Login now!</button>
     </form>
 </div>

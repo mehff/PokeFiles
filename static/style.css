@@ -1,0 +1,129 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    width: 100%;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    background: rgb(29,10,48);
+    background: linear-gradient(124deg, rgba(29,10,48,1) 0%, rgba(69,18,74,1) 56%, rgba(128,63,205,1) 100%) fixed;
+    color: rgb(255, 255, 255);
+}
+
+.container{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(116, 116, 116, 0.397);
+    border-radius: 10px;
+    padding: 60px;
+    width: 500px;
+    max-width: fit-content;
+    align-items: center;
+    font-size: 1.4em;
+    animation-name: FadeIn;
+    animation-duration: 1.0s;
+    transition-timing-function: linear;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.containerlarge{
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translate(-50%, -15%);
+    background: rgba(116, 116, 116, 0.397);
+    border-radius: 10px;
+    padding: 60px;
+    width: 500px;
+    max-width: fit-content;
+    align-items: center;
+    font-size: 1.4em;
+    animation-name: FadeIn;
+    animation-duration: 1.0s;
+    transition-timing-function: linear;
+    text-align: center;
+    margin-top: 15px;
+}
+
+@keyframes FadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.titulo{
+    margin-top: 10%;
+    margin-bottom: 10%;
+}
+
+input{
+    min-width: 500px;
+    border-radius: 22px;
+    border: 2px rgb(203, 101, 250) solid;
+    padding: 5px;
+    height: 3pc;
+    margin: 2px 0px 12px -5px;
+    background-color: rgb(180, 180, 180);
+    
+}
+
+
+button{
+    margin-top: 10%;
+    margin-bottom: 10%;
+    text-align: center;
+    width: 55%;
+    border-radius: 20px;
+    background: rgb(179,143,205);
+    background: linear-gradient(124deg, rgba(179,143,205,1) 0%, rgba(146,65,154,1) 56%, rgba(83,41,133,1) 100%);
+    color: rgb(0, 0, 0);
+    align-items: center;
+    border: none;
+    height: 40px;
+    font-size: 1.1em;
+    outline: none;
+    font-weight: bold;
+}
+
+button:hover{
+    background: rgb(52,25,78);
+    background: linear-gradient(124deg, rgba(52,25,78,1) 0%, rgba(92,32,98,1) 56%, rgba(128,63,205,1) 100%);
+    color: aliceblue;
+    cursor: pointer;
+}
+
+a{
+    background-color: rgba(117, 117, 117, 0.815);
+    border: 2px solid rgb(193, 99, 255);
+    padding: 14px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    width: 300px;
+    margin: 2%;
+    border-radius: 10px;
+    color:rgb(255, 255, 255)
+}
+
+a:hover{
+    background-color: rgb(160, 160, 160);
+}
+
+input{
+    font-size: 0.9em;
+}
+
+.join{
+    margin-bottom: -35px;
+}
+
+.joinhr{
+    margin-bottom: -20px;
+}

@@ -68,7 +68,7 @@ app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 def userArea():
     return render_template("/userarea.html", session=session)
 
-# User area
+# Logout user
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
     return render_template("/landing.html", session={})
@@ -94,13 +94,13 @@ def upload_file():
                             for file in files:
                                 file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
 
+                            flash("Upload successful!")
                             return render_template("uploads.html", form=form, session=session)
-
                         else:
                             
                             return render_template("uploads.html", form=form, session=session)
                     except:
-
+                        flash("There's nothing to upload!")
                         # If there's no files to upload
                         return render_template("uploads.html", form=form, session=session)
         else:
@@ -112,13 +112,14 @@ def upload_file():
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
     try:
-        if session["perms"]:
+        if session["perms"] >= 0:
             filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
 
             pathList = []
-
+            
             for i in filenames:
                 pathList.append(i)
+            
             return render_template("downloads.html", session=session, pathList=pathList)
     except:
         return render_template("denied.html", session={})
@@ -127,7 +128,7 @@ def downloads():
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
 def downloadfile(filename):
     try:
-        if session["perms"]:
+        if session["perms"] >= 0:
             uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
             return send_from_directory(uploads, filename, as_attachment=True)
         else:
@@ -150,11 +151,12 @@ def deletefile(deletefilename):
 
             for i in filenames:
                 pathList.append(i)
-                return render_template("downloads.html", session=session, pathList=pathList)
+                
+            return render_template("downloads.html", session=session, pathList=pathList)
         else:
-            return render_template("denied.html", session={})
+            return render_template("denied.html", session={}, pathList=pathList)
     except:
-        return render_template("denied.html", session={})
+        return render_template("denied.html", session={}, pathList=pathList)
 # Register user
 @app.route("/newuser", methods = ["GET", "POST"])
 def regMain():
@@ -207,6 +209,7 @@ def regMain():
             dbResponse.inserted_id
 
             # Visual indication of success
+            flash("Account created! Please login now.")
             return render_template("/login.html", form=form)
             
         else:
@@ -269,9 +272,13 @@ def loginPage():
             flash("User not found!")
             return render_template("/login.html", form=form)
 
-        # Store values in session
-        for key, value in data.items():
-            session.update({key: value})
+        try:
+            # Store values in session
+            for key, value in data.items():
+                session.update({key: value})
+        except:
+            flash("Please insert your username and password")
+            return render_template("/login.html", form=form)
             
         # Check if session is unpopulated (first access)
         if len(session) == 0:

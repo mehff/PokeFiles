@@ -1,15 +1,22 @@
-<h2>{{session["name"]|capitalize}}'s PokeFiles</h2>
-<form action="/userarea" method="POST">
-    <button>USER AREA</button>
-</form>
-<form action="/logout" method="POST">
-    <button>LOGOUT</button>
-</form>
-<h2>Upload File</h2>
-<form action = "/upload-file" method = "POST" enctype = "multipart/form-data">
-    <div class = "custom-file">
-        <input type="file" name = "file" id = "file" multiple = "true" />
-        <label class = "custom-file-label" for = "image">Select file...</label>
-    </div>
-    <button type="submit">Upload file...</button>
-</form>
+
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
+
+<div class="container">
+    <h2 class="titulo">Upload File</h2>
+    <form action="/userarea" method="POST">
+        <button>User Area</button>
+    </form>
+    <form action = "/upload-file" method = "POST" enctype = "multipart/form-data">
+        <div class = "custom-file">
+            <label class = "custom-file-label" for = "image"> <input type="file" name = "file" id = "file" multiple = "true" /> </label>
+        </div>
+        <button type="submit">Upload file...</button>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for msg in messages %}
+                    <p>{{msg}}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </form>
+</div>

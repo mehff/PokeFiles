@@ -1,14 +1,29 @@
 </div><title>My PokeFiles</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
 <div class="container">
-    <h2>{{session["name"]|capitalize}}'s PokeFiles</h2>
-    
-    <form action="/upload-file" method="POST">
-        <button>UPLOAD STUFF</button>
-    </form>
-    <form action="/downloads" method="POST">
-        <button>DOWNLOAD STUFF</button>
-    </form>
+    <h2 class="titulo">{{session["name"]|capitalize}}'s PC</h2>
     <form action="/logout" method="POST">
-        <button>LOGOUT</button>
+        <button>Log off</button>
     </form>
+    {% if session["perms"] >= 1 %}
+    <form action="/upload-file" method="POST">
+        <hr>
+        <p class="joinhr">Want to deposit files?</p>
+        <button>Upload</button>
+    </form>
+    {% endif %}
+    {% if session["perms"]>= 0 %}
+    <form action="/downloads" method="POST">
+        <hr>
+        <p class="joinhr">Want to withdraw files?</p>
+        <button>Download</button>
+    </form>
+    {% endif %}
+    {% if session["perms"] == 3 %}
+    <form action="/upload-file" method="POST">
+        <hr>
+        <p>Manage Accounts</p>
+        <button>Change'em!</button>
+    </form>
+    {% endif %}
 </div>

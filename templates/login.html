@@ -1,8 +1,10 @@
 </div><title>Hello PokeFiles</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
 <div class="container">
-    <h2>Hello PokeFiles</h2>
+    <h2>Which PC should be accessed?</h2><br>
+    <p class="join">Don't have an account?</p>
     <form action="/newuser" method="POST">
-        <button>REGISTER</button>
+        <button>Register</button>
     </form>
     <form action="/login" method="post" role="form">
         <div class="form-group">

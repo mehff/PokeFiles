@@ -1,10 +1,11 @@
 <title>PokeFiles</title>
-<link rel="stylesheet" media="screen">
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <div class="container">
-    <h2>PokeFiles</h2>
+    <h2 class= "titulo">Create your PokeAccount!</h2><br>
     <form action="/login" method="POST">
-        <button>LOGIN</button>
+        <p class="join">Already have an account?</p>
+        <button>Login now!</button>
     </form>
     <form action="/newuser" method="post" role="form">
     {{ form.csrf }}
@@ -12,14 +13,14 @@
             <label for="name">Username:</label>
             <input type="text" class="form-control" id="username" name="username" placeholder="Your desired username.">
             
+            <label for="name">Name:</label>
+            <input type="name" class="form-control" id="name" name="name" placeholder="Enter your name or nickname.">
+
             <label for="email">Email:</label>
             <input type="text" class="form-control" id="email" name="email" placeholder="This email will be used to confirm your account.">
             
             <label for="password">Password:</label>
             <input type="password" class="form-control" id="password" name="password" placeholder="Enter a password.">
-            
-            <label for="name">Name:</label>
-            <input type="name" class="form-control" id="name" name="name" placeholder="Enter your name or nickname.">
             
         </div>
         <button type="submit" class="btn btn-success">Sign Up</button>
@@ -29,7 +30,7 @@
     {% for message in messages %}
     {% if "Error" not in message[1]: %}
     <div class="alert alert-info">
-        <strong>Success!</strong>
+        
         {{ message[1] }}
     </div>
     {% endif %}
