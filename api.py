@@ -4,7 +4,6 @@ from wtforms import Form, TextAreaField, TextAreaField, validators, FileField
 import pymongo
 import pathlib
 import os
-import pprint
 
 # App configuration
 DEBUG = True
@@ -67,7 +66,12 @@ app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 # User area
 @app.route("/userarea", methods=["GET", "POST"])
 def userArea():
-    return render_template("/userarea.html")
+    return render_template("/userarea.html", session=session)
+
+# User area
+@app.route("/logout", methods=["GET", "POST"])
+def logout():
+    return render_template("/landing.html", session={})
 
 # Upload files
 @app.route("/upload-file", methods = ["GET", "POST"])
@@ -110,10 +114,24 @@ def downloads():
     return render_template("downloads.html", session=session, pathList=pathList)
 
 # Download file
-@app.route("/downloads/<path:filename>", methods=["GET", "POST"])
+@app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
 def downloadfile(filename):
     uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
     return send_from_directory(uploads, filename, as_attachment=True)
+
+# Remove file
+@app.route("/downloads/delete/<path:deletefilename>", methods=["GET", "POST"])
+def deletefile(deletefilename):
+    uploads = os.path.join(app.root_path, app.config['FILE_UPLOADS'])
+    os.remove(uploads+"/"+deletefilename)
+
+    filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
+
+    pathList = []
+
+    for i in filenames:
+        pathList.append(i)
+    return render_template("downloads.html", session=session, pathList=pathList)
 
 # Register user
 @app.route("/newuser", methods = ["GET", "POST"])
@@ -121,62 +139,55 @@ def regMain():
 
     # Select wtform format
     form = RegistrationForms(request.form)
-    print(form.errors)
     
     # Only accept POST requests
     if request.method == "POST":
 
-        print("REG IF")
-        # print(session)
-        # if session:
-        #     flash("You already have a account! Wanna login now?")
-        #     return render_template("/login.html", form=form)
         try:
-            print("REG TRY")
             username = request.form["username"]
             password = request.form["password"]
             email = request.form["email"]
             name = request.form["name"]
-            print(username, password, email, name)
-
-            # Validate data passed into forms
-            if form.validate():
-                print("REG TRY IF")
-                # Encrypt info and store into DB.
-                info = [username, password]
-                encryptedInfo = []
-                for i in info:
-                    encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
-
-                # Compose dict with info
-                user = {
-                    "username": encryptedInfo[0],
-                    "password": encryptedInfo[1],
-                    "email": email,
-                    "name": name,
-                    "perms": 0,
-                    }
-                # Check for duplicity
-                if db.users.find_one({"username": user['username']}):
-                    flash("Username taken. Try another one!")
-                    return render_template('/newuser.html', form=form)
-
-                if db.users.find_one({"email": user['email']}):
-                    flash("Email already registered! Enter another one.")
-                    return render_template("/newuser.html", form=form)
-
-                # Send to DB
-                dbResponse = db.users.insert_one(user)
-                dbResponse.inserted_id
-
-                # Visual indication of success
-                flash("Registration done. ", encryptedInfo)
-                return render_template("/login.html", form=form)
-            # Visual indication of failure
-            else:
-                flash("Error! All form fields are required. ", form=form)
+            
         except:
-            flash("Error! Password and Email must have at least 6 characters. ", "error")
+            return render_template("/newuser.html", form=form)
+        # Validate data passed into forms
+        if form.validate():
+            # Encrypt info and store into DB.
+            info = [username, password]
+            encryptedInfo = []
+            for i in info:
+                encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
+
+            # Compose dict with info
+            user = {
+                "username": encryptedInfo[0],
+                "password": encryptedInfo[1],
+                "email": email,
+                "name": name,
+                "perms": 0,
+                }
+                
+                # Check for duplicity
+            if db.users.find_one({"username": user['username']}):
+                flash("Username taken. Try another one!")
+                return render_template('/newuser.html', form=form)
+
+            if db.users.find_one({"email": user['email']}):
+                flash("Email already registered! Enter another one.")
+                return render_template("/newuser.html", form=form)
+
+            # Send to DB
+            dbResponse = db.users.insert_one(user)
+            dbResponse.inserted_id
+
+            # Visual indication of success
+            flash("Registration done. ", encryptedInfo)
+            return render_template("/login.html", form=form)
+            
+        else:
+            # Visual indication of failure
+            flash("Error! Password and Email must have at least 6 characters. ")
             return render_template("/newuser.html", form=form)
 
 # First page
@@ -207,24 +218,41 @@ def loginPage():
         try:
             username = request.form["username"]
             password = request.form["password"]
+            
+        except:
+            # Render page
+            return render_template("/login.html", form=form)
 
-            # Encrypt info and store into DB.
-            info = [username, password]
-            encryptedInfo = []
+        # Encrypt info and store into DB.
+        info = [username, password]
+        encryptedInfo = []
 
-            for i in info:
-                encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
+        for i in info:
+            encryptedInfo.append(sha256(str(i).encode('utf-8')).hexdigest())
 
-            # Set user
-            user = {"username": encryptedInfo[0], "password": encryptedInfo[1]}
-
+        # Set user
+        user = {"username": encryptedInfo[0], "password": encryptedInfo[1]}
+        
+        try:
             # Find user in db
             data = db.users.find_one({"username":user["username"], "password":user["password"]})
+        except:
+            flash("User not found!")
+            return render_template("/login.html", form=form)
 
+        try:
             # Store values in session
             for key, value in data.items():
                 session.update({key: value})
 
+        except:
+            flash("OMEUDEUS")
+            return render_template("/login.html", form=form)
+
+        if len(session) == 0:
+            return render_template("/login.html", form=form)
+
+        else:
             # If db query returns True
             if data.items() == session.items():
 
@@ -232,13 +260,17 @@ def loginPage():
                 flash("Logged in successfully!!")
                 # Render user's userarea
                 return render_template("/userarea.html", session=session)
-                
-        except:
 
-            # Visual indication of failure
-            flash("Login or password incorrect")
-            # return render_template("/userarea.html", session=session)
-            return render_template("/login.html", form=form)
+            else:
+                # Visual indication of failure
+                flash("Login or password incorrect")
+        flash("W H A T")
+        return render_template("/login.html", form=form)
+
+        # except:
+
+        #     # Render page
+        #     return render_template("/login.html", form=form)
 
 # Run app
 if __name__ == "__main__":
