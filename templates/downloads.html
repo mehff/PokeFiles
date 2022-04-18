@@ -1,20 +1,24 @@
-<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='downloadPage.css')}}">
 <div class="dontleaveme">
-    <div class="containerlarge">
+    <div class="container">
         <h2 class="titulo">Withdraw Files</h2>
         <form action="/userarea" method="POST">
             <button>User area</button>
         </form>
-        <p>Available files:</p>
+        <p>Available files:</p><br>
         {% for File in pathList %}
-        <div>
-            <hr>
+        <div class="conjunto" >
+
             <p>{{File}}</p>
-            <a href="{{url_for ('downloadfile', filename = File)}}" download="">Download</a><br>
-            {% if session["perms"] >= 2 %}
-                <a href="{{url_for ('deletefile', deletefilename = File)}}">Delete</a>
-            {% endif %}
-            <hr>
+            <div>
+                <a class="elements" href="{{url_for ('downloadfile', filename = File)}}" download="">Download</a>
+                {% if session["perms"] >= 2 %}
+                    <div>
+                    <a class="elements" href="{{url_for ('deletefile', deletefilename = File)}}">Delete</a>
+                    </div>
+                {% endif %}
+                <br>
+            </div>
         </div>
         {% endfor %}
     </div>

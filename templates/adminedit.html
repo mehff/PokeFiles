@@ -1,0 +1,26 @@
+</div><title>Elite PokeFiles</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='downloadPage.css')}}">
+<div class="container-large">
+    <h2 class="titulo">{{session["name"]|capitalize}}'s Elite PC</h2>
+    <p>Change other user's permissions:</p>
+    <form action="/userarea" method="POST">
+        <button>User Area</button>
+    </form>
+
+    <form>
+    {% if session["perms"] == 3 %}
+        {% for data in data %}
+        <div class="conjunto-perm">
+        <p>Email: {{data["email"]}}<br>Perms: {{data["perms"]}}<br>
+            <br>
+            <label for="perms">Change to:</label><br>
+            <a class="elements-perm" href="{{url_for ('adminUpdate0', user = data['_id'])}}">Perms 0</a>
+            <a class="elements-perm" href="{{url_for ('adminUpdate1', user = data['_id'])}}">Perms 1</a>
+            <a class="elements-perm" href="{{url_for ('adminUpdate2', user = data['_id'])}}">Perms 2</a>
+        </p>
+        </div>
+
+        {% endfor %}
+    {% endif %}
+    </form>
+</div>

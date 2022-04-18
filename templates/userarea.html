@@ -1,5 +1,5 @@
 </div><title>My PokeFiles</title>
-<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='downloadPage.css')}}">
 <div class="container">
     <h2 class="titulo">{{session["name"]|capitalize}}'s PC</h2>
     <form action="/logout" method="POST">
@@ -20,10 +20,27 @@
     </form>
     {% endif %}
     {% if session["perms"] == 3 %}
-    <form action="/upload-file" method="POST">
-        <hr>
-        <p>Manage Accounts</p>
-        <button>Change'em!</button>
-    </form>
+        <form action="/adminChange" method="POST">
+            <hr>
+            <p class="joinhr">Manage Accounts</p>
+            <button>Change'em!</button>
+        </form>
+        <form action="/ngrokOn" method="POST">
+            <hr>
+            <p class="joinhr">Turn on Ngrok</p>
+            <button>Turn it on!</button>
+        </form>
+        <form action="/ngrokOff" method="POST">
+            <hr>
+            <p class="joinhr">Turn ALL Ngrok tunnels off<br>WARNING! You can't turn it on again if you're using the tunnel now.</p>
+            <button>Turn it off!!</button>
+        </form>
     {% endif %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <p>{{msg}}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 </div>

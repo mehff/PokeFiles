@@ -12,10 +12,6 @@ body{
 }
 
 .container{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     background: rgba(116, 116, 116, 0.397);
     border-radius: 10px;
     padding: 60px;
@@ -27,8 +23,27 @@ body{
     animation-duration: 1.0s;
     transition-timing-function: linear;
     text-align: center;
-    margin-top: 15px;
+    margin: 20px auto;
+
 }
+
+.container-large{
+    background: rgba(116, 116, 116, 0.397);
+    border-radius: 10px;
+    padding: 60px;
+    width: 700px;
+    max-width: fit-content;
+    align-items: center;
+    font-size: 1.4em;
+    animation-name: FadeIn;
+    animation-duration: 1.0s;
+    transition-timing-function: linear;
+    text-align: center;
+    margin: 20px auto;
+
+}
+
+
 
 @keyframes FadeIn {
     0% {
@@ -81,7 +96,7 @@ button:hover{
 }
 
 a{
-    background-color: rgba(117, 117, 117, 0.815);
+    background-color: rgba(65, 1, 78, 0.815);
     border: 2px solid rgb(193, 99, 255);
     padding: 14px 25px;
     text-align: center;
@@ -91,10 +106,11 @@ a{
     margin: 2%;
     border-radius: 10px;
     color:rgb(255, 255, 255)
-}
+} 
 
 a:hover{
-    background-color: rgb(160, 160, 160);
+    background-color: rgb(64, 48, 73);
+    font-weight: bold;
 }
 
 input{
@@ -107,4 +123,43 @@ input{
 
 .joinhr{
     margin-bottom: -20px;
+}
+
+.conjunto{
+    background-color: rgb(111, 54, 138);
+    width: 400px;
+    height: 115px;
+    border: 2px solid rgb(91, 8, 107);
+    margin: 6px;
+    border-radius: 10px;
+}
+
+.elements{
+    text-align: center;
+    float: left;
+    width: 25%;
+    margin: 4px;
+    font-size: 0.7em;
+    height: 15px;
+    margin-left: 25px;
+}
+
+.conjunto-perm{
+    background-color: rgb(111, 54, 138);
+    width: 650px;
+    height: 180px;
+    border: 2px solid rgb(91, 8, 107);
+    margin: 6px;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.elements-perm{
+    text-align: center;
+    float: left;
+    width: 22%;
+    margin: 4px;
+    font-size: 0.7em;
+    height: 15px;
+    
 }

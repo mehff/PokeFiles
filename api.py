@@ -1,9 +1,11 @@
 from hashlib import sha256
-from flask import Flask, request, render_template, flash, request, send_file, send_from_directory
+from flask import Flask, request, render_template, flash, request, send_file, send_from_directory, Markup
 from wtforms import Form, TextAreaField, TextAreaField, validators, FileField
 import pymongo
 import pathlib
 import os
+from pyngrok import ngrok
+from bson import ObjectId
 
 # App configuration
 DEBUG = True
@@ -40,6 +42,9 @@ session = {}
 # File pathes
 pathList = []
 
+# Ngrok status
+ngrokStat = 0
+
 # WTForms registration
 class RegistrationForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
@@ -63,10 +68,81 @@ class FilesForm(Form):
 
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 
+# Ngrok setup
+@app.route("/ngrokOn", methods=["GET", "POST"])
+def ngrokOn():
+    try:
+        if session["perms"] == 3:
+            url = ngrok.connect(5000)
+            print("Tunnel URL: ", url)
+            ngrokStat = 1
+            flash(Markup(f"Tunnel URL:<br>h{url}"))
+            return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+    except:
+        return render_template("denied.html", session={})
+
+@app.route("/ngrokOff", methods=["GET", "POST"])
+def ngrokOff():
+    try:
+        if session["perms"] == 3:
+            url = ngrok.kill()
+            print("Ngrok disconnected ", url)
+            ngrokStat = 0
+            flash("Ngrok tunnels disabled.")
+            return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+    except:
+        return render_template("denied.html", session={})
+
 # User area
 @app.route("/userarea", methods=["GET", "POST"])
 def userArea():
-    return render_template("/userarea.html", session=session)
+    try:
+        if session["perms"] >=0:
+            return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+    except:
+        return render_template("denied.html", session={})
+
+# Admin page redirect
+@app.route("/adminChange", methods=["GET", "POST"])
+def adminChange():
+    if session["perms"] ==3:
+        data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
+        return render_template("/adminedit.html", session=session, data=data)
+
+    print("ué")
+    return render_template("denied.html", session={})
+
+# Admin set perms
+@app.route("/adminUpdate/0/<user>", methods=["GET", "POST"])
+def adminUpdate0(user):
+    oid_str = user
+    oid = ObjectId(oid_str)
+    userToUpdate = {"_id":oid}
+    updateTo = {"$set":{"perms":0}}
+    arroz = db.users.update_one(userToUpdate, updateTo)
+    return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+
+# Admin set perms
+@app.route("/adminUpdate/1/<user>", methods=["GET", "POST"])
+def adminUpdate1(user):
+    oid_str = user
+    oid = ObjectId(oid_str)
+    userToUpdate = {"_id":oid}
+    updateTo = {"$set":{"perms":1}}
+    arroz = db.users.update_one(userToUpdate, updateTo)
+    print(arroz)
+    return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+
+# Admin set perms
+@app.route("/adminUpdate/2/<user>", methods=["GET", "POST"])
+def adminUpdate2(user):
+    oid_str = user
+    oid = ObjectId(oid_str)
+    userToUpdate = {"_id":oid}
+    updateTo = {"$set":{"perms":2}}
+    arroz = db.users.update_one(userToUpdate, updateTo)
+    print(arroz)
+    return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
 
 # Logout user
 @app.route("/logout", methods=["GET", "POST"])
@@ -157,6 +233,7 @@ def deletefile(deletefilename):
             return render_template("denied.html", session={}, pathList=pathList)
     except:
         return render_template("denied.html", session={}, pathList=pathList)
+
 # Register user
 @app.route("/newuser", methods = ["GET", "POST"])
 def regMain():
@@ -289,7 +366,7 @@ def loginPage():
             if data.items() == session.items():
 
                 # Render user's userarea
-                return render_template("/userarea.html", session=session)
+                return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
 
             else:
                 # Visual indication of failure
