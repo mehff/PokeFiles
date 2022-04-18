@@ -305,11 +305,15 @@ def upload_file():
 # Admin page redirect
 @app.route("/adminChange", methods=["GET", "POST"])
 def adminChange():
-    if session["perms"] >= 3:
-        data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
-        return render_template("/adminedit.html", session=session, data=data)
-
-    return render_template("denied.html", session={})
+    try:
+        if session["perms"] == 3:
+            data = db.users.find({"perms" : {"$gte":0,"$lte":2}})
+            return render_template("/adminedit.html", session=session, data=data)
+        elif session["perms"] == 4:
+            data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
+            return render_template("/adminedit.html", session=session, data=data)
+    except:
+        return render_template("denied.html", session={})
 
 # Admin set perms:
 def setPerms(user, futurePerms):
@@ -347,7 +351,7 @@ def adminUpdate2(user):
     else:
         return render_template("denied.html", session={})
 
-# Admin set perms 2
+# Admin set perms 3
 @app.route("/adminUpdate/3/<user>", methods=["GET", "POST"])
 def adminUpdate3(user):
     if session["perms"] == 4:
