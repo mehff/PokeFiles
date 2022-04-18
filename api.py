@@ -307,13 +307,28 @@ def upload_file():
 def adminChange():
     try:
         if session["perms"] == 3:
+            print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":2}})
+            print(data)
             return render_template("/adminedit.html", session=session, data=data)
-        elif session["perms"] == 4:
+        if session["perms"] == 4:
+            print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
+            print(data)
             return render_template("/adminedit.html", session=session, data=data)
     except:
-        return render_template("denied.html", session={})
+        return render_template("/adminedit.html", session=session, data=data)
+        # return render_template("denied.html", session={})
+
+# Admin set perms:
+@app.route("/adminDelete/<user>", methods=["GET", "POST"])
+def adminDelete(user):
+    data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
+    # Convert _id str to ObjectId
+    oid = ObjectId(user)
+    # Apply changes
+    db.users.delete_one({"_id":oid})
+    return render_template("/adminedit.html", session=session, data=data)
 
 # Admin set perms:
 def setPerms(user, futurePerms):
