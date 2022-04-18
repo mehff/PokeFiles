@@ -2,7 +2,12 @@
 <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='downloadPage.css')}}">
 <div class="container-large">
     <h2 class="titulo">{{session["name"]|capitalize}}'s Elite PC</h2>
-    <p>Change other user's permissions:<br><br>Perms 0: Download<br>Perms 1: Perms 0 + Upload<br>Perms 2: Perms 1 + Delete<br>Perms 3: Perms 2 + Change other user's permissions'</p>
+    <p>Change other user's permissions:</p><br>
+    <p class="explicacao"><br><b>Perms 0:</b> Download<br>
+        <b>Perms 1:</b> Perms 0 + Upload<br>
+        <b>Perms 2:</b> Perms 1 + Delete<br>
+        <b>Perms 3:</b> Perms 2 + Change other user's permissions
+    </p>
     <form action="/userarea" method="POST">
         <button>User Area</button>
     </form>
@@ -22,7 +27,6 @@
             {% endif %}
         </p>
         </div>
-
         {% endfor %}
     {% endif %}
     </form>
