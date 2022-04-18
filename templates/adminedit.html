@@ -5,8 +5,10 @@
     <p>Change other user's permissions:</p><br>
     <p class="explicacao"><br><b>Perms 0:</b> Download<br>
         <b>Perms 1:</b> Perms 0 + Upload<br>
-        <b>Perms 2:</b> Perms 1 + Delete<br>
-        <b>Perms 3:</b> Perms 2 + Change other user's permissions
+        <b>Perms 2:</b> Perms 1 + Delete
+        {% if session["perms"] == 4 %}
+        <br><b>Perms 3:</b> Perms 2 + Change other user's permissions
+        {% endif %}
     </p>
     <form action="/userarea" method="POST">
         <button>User Area</button>
