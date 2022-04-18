@@ -11,37 +11,35 @@
     {{ form.csrf }}
         <div class="form-group">
             <label for="name">Username:</label>
-            <input type="text" class="form-control" id="username" name="username" placeholder="Your desired username.">
+            <input type="text" class="form-control" id="username" name="username" placeholder="Your desired username">
             
             <label for="name">Name:</label>
-            <input type="name" class="form-control" id="name" name="name" placeholder="Enter your name or nickname.">
+            <input type="name" class="form-control" id="name" name="name" placeholder="Enter your name or nickname">
 
             <label for="email">Email:</label>
-            <input type="text" class="form-control" id="email" name="email" placeholder="This email will be used to confirm your account.">
+            <input type="text" class="form-control" id="email" name="email" placeholder="This email will be used to confirm your account">
             
             <label for="password">Password:</label>
-            <input type="password" class="form-control" id="password" name="password" placeholder="Enter a password.">
-            
+            <input type="password" class="form-control" id="password" name="password" placeholder="Enter a password">
         </div>
         <button type="submit" class="btn btn-success">Sign Up</button>
     </form>
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for message in messages %}
-    {% if "Error" not in message[1]: %}
-    <div class="alert alert-info">
-        
-        {{ message[1] }}
-    </div>
-    {% endif %}
-    
-    {% if "Error" in message[1]: %}
-    <div class="alert alert-warning">
-        {{ message[1] }}
-    </div>
-    {% endif %}
-    {% endfor %}
-    {% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                {% if "Error" not in message[1]: %}
+                <div class="alert alert-info">
+                    {{ message[1] }}
+                </div>
+                {% endif %}
+                
+                {% if "Error" in message[1]: %}
+                <div class="alert alert-warning">
+                    {{ message[1] }}
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     {% endwith %}
     
 </div>

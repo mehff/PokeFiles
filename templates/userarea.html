@@ -19,7 +19,7 @@
         <button>Download</button>
     </form>
     {% endif %}
-    {% if session["perms"] == 3 %}
+    {% if session["perms"] >= 3 %}
         <form action="/adminChange" method="POST">
             <hr>
             <p class="joinhr">Manage Accounts</p>
