@@ -1,5 +1,5 @@
 from hashlib import sha256
-from flask import Flask, request, render_template, flash, request, send_from_directory, Markup
+from flask import Flask, request, render_template, flash, request, send_from_directory, Markup, session
 from wtforms import Form, TextAreaField, TextAreaField, validators, FileField
 import pymongo
 import pathlib
@@ -40,7 +40,6 @@ except:
     print("ERROR: Connection to MongoDB failed")
 
 # Setup
-session = {}
 pathList = []
 ngrokStat = 0
 
@@ -177,21 +176,28 @@ def loginPage():
             flash("User not found!")
             return render_template("/login.html", form=form)
 
+        # Store values in session
         try:
-            # Store values in session
             for key, value in data.items():
-                session.update({key: value})
+                if type(value) == ObjectId:
+                    session.update({key: str(value)})
+                else:
+                    session.update({key: value})
         except:
             flash("Please insert your username and password")
             return render_template("/login.html", form=form)
-            
+        
+        print("SESSION DEBUG!\n",session.items())
+        print("DATA ITEMS!\n", data.items())
+
         # Check if session is unpopulated (first access)
         if len(session) == 0:
             return render_template("/login.html", form=form)
 
         else:
+
             # If db query returns True
-            if data.items() == session.items():
+            if len(session.items()) != 0:
 
                 # Render user's userarea
                 return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
