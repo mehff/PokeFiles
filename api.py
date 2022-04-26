@@ -420,7 +420,7 @@ def ngrokOn():
             tunnels = ngrok.get_tunnels()
             safeTunnel = tunnels[0].public_url
             ngrokStat = 1
-            flash(Markup(f"Tunnel URL:<br>{safeTunnel}"))
+            flash(Markup(f"Tunnel URL:<br><a href={safeTunnel}>{safeTunnel}</a>"))
             return render_template("/userarea.html", ngrokStat=ngrokStat)
     # except:
     #     return render_template("denied.html")
