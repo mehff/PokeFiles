@@ -81,13 +81,24 @@ def regMain():
     # Only accept POST requests
     if request.method == "POST":
 
-        # Check if request has the info needed
+        # Check if request has the data needed
         try:
             username = request.form["username"]
             password = request.form["password"]
             email = request.form["email"]
             name = request.form["name"]
             
+            # Verify if password is unique in the request
+            if username == password or email == password or name == password:
+                flash("You cannot use other provided info as password!")
+                return render_template("/newuser.html", form=form)
+
+            # Verify if password respects some rules
+            if any(i.isdigit() for i in password) == False:
+                flash("Your password has to have at least one number!")
+                return render_template("/newuser.html", form=form)
+
+        # Return to newuser page if it doesn't
         except:
             return render_template("/newuser.html", form=form)
 
@@ -151,7 +162,6 @@ def loginPage():
         try:
             username = request.form["username"]
             password = request.form["password"]
-            
         except:
             # Render page
             return render_template("/login.html", form=form)
@@ -404,15 +414,16 @@ def adminUpdate3(user):
 # Ngrok setup
 @app.route("/ngrokOn", methods=["GET", "POST"])
 def ngrokOn():
-    try:
+    # try:
         if session["perms"] >= 3:
             url = ngrok.connect(5000)
-            print("Tunnel URL: ", url)
+            tunnels = ngrok.get_tunnels()
+            safeTunnel = tunnels[0].public_url
             ngrokStat = 1
-            flash(Markup(f"Tunnel URL:<br>{url}"))
+            flash(Markup(f"Tunnel URL:<br>{safeTunnel}"))
             return render_template("/userarea.html", ngrokStat=ngrokStat)
-    except:
-        return render_template("denied.html")
+    # except:
+    #     return render_template("denied.html")
 
 @app.route("/ngrokOff", methods=["GET", "POST"])
 def ngrokOff():
