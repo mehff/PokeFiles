@@ -43,8 +43,8 @@ except:
 pathList = []
 ngrokStat = 0
 
-# WTForms newuser
-class NewuserForms(Form):
+# WTForms newUser
+class newUserForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
     password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
     email = TextAreaField("Email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
@@ -66,30 +66,41 @@ app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 def homePage():
 
     # Select wtforms format
-    form = NewuserForms(request.form)
+    form = newUserForms(request.form)
 
-    # And render the newuser landing page
+    # And render the newUser landing page
     return render_template("/landing.html", form=form)
 
 # Register user
-@app.route("/newuser", methods = ["GET", "POST"])
+@app.route("/newUser", methods = ["GET", "POST"])
 def regMain():
 
     # Select wtform format
-    form = NewuserForms(request.form)
+    form = newUserForms(request.form)
     
     # Only accept POST requests
     if request.method == "POST":
 
-        # Check if request has the info needed
+        # Check if request has the data needed
         try:
             username = request.form["username"]
             password = request.form["password"]
             email = request.form["email"]
             name = request.form["name"]
             
+            # Verify if password is unique in the request
+            if username == password or email == password or name == password:
+                flash("You cannot use other provided info as password!")
+                return render_template("/newUser.html", form=form)
+
+            # Verify if password respects some rules
+            if any(i.isdigit() for i in password) == False:
+                flash("Your password has to have at least one number!")
+                return render_template("/newUser.html", form=form)
+
+        # Return to newUser page if it doesn't
         except:
-            return render_template("/newuser.html", form=form)
+            return render_template("/newUser.html", form=form)
 
         # Validate data passed into forms
         if form.validate():
@@ -112,11 +123,11 @@ def regMain():
             # Check for duplicity
             if db.users.find_one({"username": user["username"]}):
                 flash("Username taken. Try another one!")
-                return render_template("/newuser.html", form=form)
+                return render_template("/newUser.html", form=form)
 
             if db.users.find_one({"email": user["email"]}):
                 flash("Email already registered! Enter another one.")
-                return render_template("/newuser.html", form=form)
+                return render_template("/newUser.html", form=form)
 
             # Send to DB
             dbResponse = db.users.insert_one(user)
@@ -129,7 +140,7 @@ def regMain():
         else:
             # Visual indication of failure
             flash("Error! Password and Email must have at least 6 characters. ")
-            return render_template("/newuser.html", form=form)
+            return render_template("/newUser.html", form=form)
 
 # Login page
 @app.route("/loginPage", methods = ["GET", "POST"])
@@ -151,7 +162,6 @@ def loginPage():
         try:
             username = request.form["username"]
             password = request.form["password"]
-            
         except:
             # Render page
             return render_template("/login.html", form=form)
@@ -186,9 +196,6 @@ def loginPage():
         except:
             flash("Please insert your username and password")
             return render_template("/login.html", form=form)
-        
-        print("SESSION DEBUG!\n",session.items())
-        print("DATA ITEMS!\n", data.items())
 
         # Check if session is unpopulated (first access)
         if len(session) == 0:
@@ -273,11 +280,21 @@ def deletefile(deletefilename):
         return render_template("denied.html", pathList=pathList)
 
 # Verify existing files
-currFile = []
 def checkExisting(fileName, fileExt, loopCount):
-    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + str(loopCount) + fileExt))):
+
+    # Check if file isn't there and if loopCount equals zero
+    # Returns unaltered file name
+    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + fileExt))) == False and loopCount == 0:
+        loopCount = loopCount + 1
+        return fileName + fileExt
+
+    # If the file exists:
+    # Returns itself
+    elif os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + "_" + str(loopCount) + fileExt))):
         loopCount = loopCount + 1
         return checkExisting(fileName, fileExt, loopCount)
+
+    # Returns altered name for each file that respects the conditions
     else:
         return fileName + "_" + str(loopCount) + fileExt
 
@@ -285,7 +302,7 @@ def checkExisting(fileName, fileExt, loopCount):
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():
 
-    # try:
+    try:
         if session["perms"] >= 1:
 
         # If request method is POST
@@ -300,40 +317,43 @@ def upload_file():
                     # User feedback
                     currUploads = []
 
-                    # Check if file exist
+                    # Get files
                     files = request.files.getlist("file")
                     for file in files:
+
                         fileName, fileExt = os.path.splitext(file.filename)
-                        uniqueFile = checkExisting(fileName, fileExt, 0)
-                        print("I DO B UNIQUEFILE", uniqueFile)
-                        file.save(os.path.join(app.config["FILE_UPLOADS"], uniqueFile))
-                        currUploads.append(uniqueFile)
-                        
+
+                        # Check if button is pressed without selecting files
+                        if fileName == "" or fileExt == "":
+                            flash("There's nothing to upload!")
+                            return render_template("uploads.html", form=form)
+
+                        # If there's files
+                        else:
+                            uniqueFile = checkExisting(fileName, fileExt, 0)
+                            file.save(os.path.join(app.config["FILE_UPLOADS"], uniqueFile))
+                            currUploads.append(uniqueFile)
                     flash(f"The following files were uploaded: {currUploads}")
                     return render_template("uploads.html", form=form)
                 else:
                     flash("There's nothing to upload!")
                     # If there's no files
                     return render_template("uploads.html", form=form)
-    # except:
-    #     return render_template("denied.html")
+    except:
+        return render_template("denied.html")
 
 # Admin page redirect
 @app.route("/adminChange", methods=["GET", "POST"])
 def adminChange():
     try:
         if session["perms"] == 3:
-            print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":2}})
-            print(data)
-            return render_template("/adminedit.html", data=data)
+            return render_template("/adminEdit.html", data=data)
         if session["perms"] == 4:
-            print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
-            print(data)
-            return render_template("/adminedit.html", data=data)
+            return render_template("/adminEdit.html", data=data)
     except:
-        return render_template("/adminedit.html", data=data)
+        return render_template("/adminEdit.html", data=data)
         # return render_template("denied.html", session={})
 
 # Admin set perms:
@@ -344,7 +364,7 @@ def adminDelete(user):
     oid = ObjectId(user)
     # Apply changes
     db.users.delete_one({"_id":oid})
-    return render_template("/adminedit.html", data=data)
+    return render_template("/adminEdit.html", data=data)
 
 # Admin set perms:
 def setPerms(user, futurePerms):
@@ -356,7 +376,7 @@ def setPerms(user, futurePerms):
     userToUpdate = {"_id":oid}
     updateTo = {"$set":{"perms":futurePerms}}
     db.users.update_one(userToUpdate, updateTo)
-    return render_template("/adminedit.html", data=data)
+    return render_template("/adminEdit.html", data=data)
 
 # Admin set perms 0
 @app.route("/adminUpdate/0/<user>", methods=["GET", "POST"])
@@ -394,22 +414,21 @@ def adminUpdate3(user):
 # Ngrok setup
 @app.route("/ngrokOn", methods=["GET", "POST"])
 def ngrokOn():
-    try:
         if session["perms"] >= 3:
-            url = ngrok.connect(5000)
-            print("Tunnel URL: ", url)
+            ngrok.connect(5000)
+            tunnels = ngrok.get_tunnels()
+            safeTunnel = tunnels[0].public_url
+            print("Ngrok connected at URL", safeTunnel)
             ngrokStat = 1
-            flash(Markup(f"Tunnel URL:<br>{url}"))
+            flash(Markup(f"Tunnel URL:<br><a href={safeTunnel}>{safeTunnel}</a>"))
             return render_template("/userarea.html", ngrokStat=ngrokStat)
-    except:
-        return render_template("denied.html")
 
 @app.route("/ngrokOff", methods=["GET", "POST"])
 def ngrokOff():
     try:
         if session["perms"] >= 3:
-            url = ngrok.kill()
-            print("Ngrok disconnected ", url)
+            ngrok.kill()
+            print("Ngrok disconnected ")
             ngrokStat = 0
             flash("Ngrok tunnels disabled.")
             return render_template("/userarea.html", ngrokStat=ngrokStat)
