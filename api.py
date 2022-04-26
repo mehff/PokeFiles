@@ -414,23 +414,21 @@ def adminUpdate3(user):
 # Ngrok setup
 @app.route("/ngrokOn", methods=["GET", "POST"])
 def ngrokOn():
-    # try:
         if session["perms"] >= 3:
-            url = ngrok.connect(5000)
+            ngrok.connect(5000)
             tunnels = ngrok.get_tunnels()
             safeTunnel = tunnels[0].public_url
+            print("Ngrok connected at URL", safeTunnel)
             ngrokStat = 1
             flash(Markup(f"Tunnel URL:<br><a href={safeTunnel}>{safeTunnel}</a>"))
             return render_template("/userarea.html", ngrokStat=ngrokStat)
-    # except:
-    #     return render_template("denied.html")
 
 @app.route("/ngrokOff", methods=["GET", "POST"])
 def ngrokOff():
     try:
         if session["perms"] >= 3:
-            url = ngrok.kill()
-            print("Ngrok disconnected ", url)
+            ngrok.kill()
+            print("Ngrok disconnected ")
             ngrokStat = 0
             flash("Ngrok tunnels disabled.")
             return render_template("/userarea.html", ngrokStat=ngrokStat)
