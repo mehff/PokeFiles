@@ -43,8 +43,8 @@ except:
 pathList = []
 ngrokStat = 0
 
-# WTForms newuser
-class NewuserForms(Form):
+# WTForms newUser
+class newUserForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
     password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
     email = TextAreaField("Email:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
@@ -66,17 +66,17 @@ app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 def homePage():
 
     # Select wtforms format
-    form = NewuserForms(request.form)
+    form = newUserForms(request.form)
 
-    # And render the newuser landing page
+    # And render the newUser landing page
     return render_template("/landing.html", form=form)
 
 # Register user
-@app.route("/newuser", methods = ["GET", "POST"])
+@app.route("/newUser", methods = ["GET", "POST"])
 def regMain():
 
     # Select wtform format
-    form = NewuserForms(request.form)
+    form = newUserForms(request.form)
     
     # Only accept POST requests
     if request.method == "POST":
@@ -91,16 +91,16 @@ def regMain():
             # Verify if password is unique in the request
             if username == password or email == password or name == password:
                 flash("You cannot use other provided info as password!")
-                return render_template("/newuser.html", form=form)
+                return render_template("/newUser.html", form=form)
 
             # Verify if password respects some rules
             if any(i.isdigit() for i in password) == False:
                 flash("Your password has to have at least one number!")
-                return render_template("/newuser.html", form=form)
+                return render_template("/newUser.html", form=form)
 
-        # Return to newuser page if it doesn't
+        # Return to newUser page if it doesn't
         except:
-            return render_template("/newuser.html", form=form)
+            return render_template("/newUser.html", form=form)
 
         # Validate data passed into forms
         if form.validate():
@@ -123,11 +123,11 @@ def regMain():
             # Check for duplicity
             if db.users.find_one({"username": user["username"]}):
                 flash("Username taken. Try another one!")
-                return render_template("/newuser.html", form=form)
+                return render_template("/newUser.html", form=form)
 
             if db.users.find_one({"email": user["email"]}):
                 flash("Email already registered! Enter another one.")
-                return render_template("/newuser.html", form=form)
+                return render_template("/newUser.html", form=form)
 
             # Send to DB
             dbResponse = db.users.insert_one(user)
@@ -140,7 +140,7 @@ def regMain():
         else:
             # Visual indication of failure
             flash("Error! Password and Email must have at least 6 characters. ")
-            return render_template("/newuser.html", form=form)
+            return render_template("/newUser.html", form=form)
 
 # Login page
 @app.route("/loginPage", methods = ["GET", "POST"])
@@ -348,12 +348,12 @@ def adminChange():
     try:
         if session["perms"] == 3:
             data = db.users.find({"perms" : {"$gte":0,"$lte":2}})
-            return render_template("/adminedit.html", data=data)
+            return render_template("/adminEdit.html", data=data)
         if session["perms"] == 4:
             data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
-            return render_template("/adminedit.html", data=data)
+            return render_template("/adminEdit.html", data=data)
     except:
-        return render_template("/adminedit.html", data=data)
+        return render_template("/adminEdit.html", data=data)
         # return render_template("denied.html", session={})
 
 # Admin set perms:
@@ -364,7 +364,7 @@ def adminDelete(user):
     oid = ObjectId(user)
     # Apply changes
     db.users.delete_one({"_id":oid})
-    return render_template("/adminedit.html", data=data)
+    return render_template("/adminEdit.html", data=data)
 
 # Admin set perms:
 def setPerms(user, futurePerms):
@@ -376,7 +376,7 @@ def setPerms(user, futurePerms):
     userToUpdate = {"_id":oid}
     updateTo = {"$set":{"perms":futurePerms}}
     db.users.update_one(userToUpdate, updateTo)
-    return render_template("/adminedit.html", data=data)
+    return render_template("/adminEdit.html", data=data)
 
 # Admin set perms 0
 @app.route("/adminUpdate/0/<user>", methods=["GET", "POST"])
