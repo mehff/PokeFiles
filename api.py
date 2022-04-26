@@ -186,9 +186,6 @@ def loginPage():
         except:
             flash("Please insert your username and password")
             return render_template("/login.html", form=form)
-        
-        print("SESSION DEBUG!\n",session.items())
-        print("DATA ITEMS!\n", data.items())
 
         # Check if session is unpopulated (first access)
         if len(session) == 0:
@@ -273,11 +270,21 @@ def deletefile(deletefilename):
         return render_template("denied.html", pathList=pathList)
 
 # Verify existing files
-currFile = []
 def checkExisting(fileName, fileExt, loopCount):
-    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + str(loopCount) + fileExt))):
+
+    # Check if file isn't there and if loopCount equals zero
+    # Returns unaltered file name
+    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + fileExt))) == False and loopCount == 0:
+        loopCount = loopCount + 1
+        return fileName + fileExt
+
+    # If the file exists:
+    # Returns itself
+    elif os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + "_" + str(loopCount) + fileExt))):
         loopCount = loopCount + 1
         return checkExisting(fileName, fileExt, loopCount)
+
+    # Returns altered name for each file that respects the conditions
     else:
         return fileName + "_" + str(loopCount) + fileExt
 
@@ -285,7 +292,7 @@ def checkExisting(fileName, fileExt, loopCount):
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():
 
-    # try:
+    try:
         if session["perms"] >= 1:
 
         # If request method is POST
@@ -300,37 +307,40 @@ def upload_file():
                     # User feedback
                     currUploads = []
 
-                    # Check if file exist
+                    # Get files
                     files = request.files.getlist("file")
                     for file in files:
+
                         fileName, fileExt = os.path.splitext(file.filename)
-                        uniqueFile = checkExisting(fileName, fileExt, 0)
-                        print("I DO B UNIQUEFILE", uniqueFile)
-                        file.save(os.path.join(app.config["FILE_UPLOADS"], uniqueFile))
-                        currUploads.append(uniqueFile)
-                        
+
+                        # Check if button is pressed without selecting files
+                        if fileName == "" or fileExt == "":
+                            flash("There's nothing to upload!")
+                            return render_template("uploads.html", form=form)
+
+                        # If there's files
+                        else:
+                            uniqueFile = checkExisting(fileName, fileExt, 0)
+                            file.save(os.path.join(app.config["FILE_UPLOADS"], uniqueFile))
+                            currUploads.append(uniqueFile)
                     flash(f"The following files were uploaded: {currUploads}")
                     return render_template("uploads.html", form=form)
                 else:
                     flash("There's nothing to upload!")
                     # If there's no files
                     return render_template("uploads.html", form=form)
-    # except:
-    #     return render_template("denied.html")
+    except:
+        return render_template("denied.html")
 
 # Admin page redirect
 @app.route("/adminChange", methods=["GET", "POST"])
 def adminChange():
     try:
         if session["perms"] == 3:
-            print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":2}})
-            print(data)
             return render_template("/adminedit.html", data=data)
         if session["perms"] == 4:
-            print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
-            print(data)
             return render_template("/adminedit.html", data=data)
     except:
         return render_template("/adminedit.html", data=data)
