@@ -200,7 +200,7 @@ def loginPage():
             if len(session.items()) != 0:
 
                 # Render user's userarea
-                return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+                return render_template("/userarea.html", ngrokStat=ngrokStat)
 
             else:
                 # Visual indication of failure
@@ -213,9 +213,9 @@ def loginPage():
 def userArea():
     try:
         if session["perms"] >= 0:
-            return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+            return render_template("/userarea.html", ngrokStat=ngrokStat)
     except:
-        return render_template("denied.html", session={})
+        return render_template("denied.html", )
 
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
@@ -231,9 +231,9 @@ def downloads():
             for i in filenames:
                 pathList.append(i)
             
-            return render_template("downloads.html", session=session, pathList=pathList)
+            return render_template("downloads.html", pathList=pathList)
     except:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 # Download file
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
@@ -245,9 +245,9 @@ def downloadfile(filename):
             uploads = os.path.join(app.root_path, app.config["FILE_UPLOADS"])
             return send_from_directory(uploads, filename, as_attachment=True)
         else:
-            return render_template("denied.html", session={})
+            return render_template("denied.html")
     except:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 # Remove file
 @app.route("/downloads/delete/<path:deletefilename>", methods=["GET", "POST"])
@@ -266,17 +266,26 @@ def deletefile(deletefilename):
             for i in filenames:
                 pathList.append(i)
                 
-            return render_template("downloads.html", session=session, pathList=pathList)
+            return render_template("downloads.html", pathList=pathList)
         else:
-            return render_template("denied.html", session={}, pathList=pathList)
+            return render_template("denied.html", pathList=pathList)
     except:
-        return render_template("denied.html", session={}, pathList=pathList)
+        return render_template("denied.html", pathList=pathList)
+
+# Verify existing files
+currFile = []
+def checkExisting(fileName, fileExt, loopCount):
+    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + str(loopCount) + fileExt))):
+        loopCount = loopCount + 1
+        return checkExisting(fileName, fileExt, loopCount)
+    else:
+        return fileName + "_" + str(loopCount) + fileExt
 
 # Upload files
 @app.route("/upload-file", methods = ["GET", "POST"])
 def upload_file():
 
-    try:
+    # try:
         if session["perms"] >= 1:
 
         # If request method is POST
@@ -285,28 +294,29 @@ def upload_file():
                 # Select wtforms method
                 form = FilesForm(request.form)
 
-                try:
+                # If there's files
+                if request.files:
                     
-                    # If there's files
-                    if request.files:
+                    # User feedback
+                    currUploads = []
+
+                    # Check if file exist
+                    files = request.files.getlist("file")
+                    for file in files:
+                        fileName, fileExt = os.path.splitext(file.filename)
+                        uniqueFile = checkExisting(fileName, fileExt, 0)
+                        print("I DO B UNIQUEFILE", uniqueFile)
+                        file.save(os.path.join(app.config["FILE_UPLOADS"], uniqueFile))
+                        currUploads.append(uniqueFile)
                         
-                        files = request.files.getlist("file")
-
-                        for file in files:
-                            file.save(os.path.join(app.config["FILE_UPLOADS"], file.filename))
-
-                        flash("Upload successful!")
-                        return render_template("uploads.html", form=form, session=session)
-                    else:
-                        return render_template("uploads.html", form=form, session=session)
-                except:
+                    flash(f"The following files were uploaded: {currUploads}")
+                    return render_template("uploads.html", form=form)
+                else:
                     flash("There's nothing to upload!")
                     # If there's no files
-                    return render_template("uploads.html", form=form, session=session)
-        else:
-            return render_template("denied.html", session={})
-    except:
-        return render_template("denied.html", session={})
+                    return render_template("uploads.html", form=form)
+    # except:
+    #     return render_template("denied.html")
 
 # Admin page redirect
 @app.route("/adminChange", methods=["GET", "POST"])
@@ -316,14 +326,14 @@ def adminChange():
             print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":2}})
             print(data)
-            return render_template("/adminedit.html", session=session, data=data)
+            return render_template("/adminedit.html", data=data)
         if session["perms"] == 4:
             print(session["perms"])
             data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
             print(data)
-            return render_template("/adminedit.html", session=session, data=data)
+            return render_template("/adminedit.html", data=data)
     except:
-        return render_template("/adminedit.html", session=session, data=data)
+        return render_template("/adminedit.html", data=data)
         # return render_template("denied.html", session={})
 
 # Admin set perms:
@@ -334,7 +344,7 @@ def adminDelete(user):
     oid = ObjectId(user)
     # Apply changes
     db.users.delete_one({"_id":oid})
-    return render_template("/adminedit.html", session=session, data=data)
+    return render_template("/adminedit.html", data=data)
 
 # Admin set perms:
 def setPerms(user, futurePerms):
@@ -346,7 +356,7 @@ def setPerms(user, futurePerms):
     userToUpdate = {"_id":oid}
     updateTo = {"$set":{"perms":futurePerms}}
     db.users.update_one(userToUpdate, updateTo)
-    return render_template("/adminedit.html", session=session, data=data)
+    return render_template("/adminedit.html", data=data)
 
 # Admin set perms 0
 @app.route("/adminUpdate/0/<user>", methods=["GET", "POST"])
@@ -354,7 +364,7 @@ def adminUpdate0(user):
     if session["perms"] >= 3:
         return setPerms(user, 0)
     else:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 # Admin set perms 1
 @app.route("/adminUpdate/1/<user>", methods=["GET", "POST"])
@@ -362,7 +372,7 @@ def adminUpdate1(user):
     if session["perms"] >= 3:
         return setPerms(user, 1)
     else:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 # Admin set perms 2
 @app.route("/adminUpdate/2/<user>", methods=["GET", "POST"])
@@ -370,7 +380,7 @@ def adminUpdate2(user):
     if session["perms"] >= 3:
         return setPerms(user, 2)
     else:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 # Admin set perms 3
 @app.route("/adminUpdate/3/<user>", methods=["GET", "POST"])
@@ -378,7 +388,7 @@ def adminUpdate3(user):
     if session["perms"] == 4:
         return setPerms(user, 3)
     else:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 
 # Ngrok setup
@@ -390,9 +400,9 @@ def ngrokOn():
             print("Tunnel URL: ", url)
             ngrokStat = 1
             flash(Markup(f"Tunnel URL:<br>{url}"))
-            return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+            return render_template("/userarea.html", ngrokStat=ngrokStat)
     except:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 @app.route("/ngrokOff", methods=["GET", "POST"])
 def ngrokOff():
@@ -402,14 +412,15 @@ def ngrokOff():
             print("Ngrok disconnected ", url)
             ngrokStat = 0
             flash("Ngrok tunnels disabled.")
-            return render_template("/userarea.html", session=session, ngrokStat=ngrokStat)
+            return render_template("/userarea.html", ngrokStat=ngrokStat)
     except:
-        return render_template("denied.html", session={})
+        return render_template("denied.html")
 
 # Logout user
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
-    return render_template("/landing.html", session={})
+    session.clear()
+    return render_template("/landing.html")
 
 # Run app
 if __name__ == "__main__":
