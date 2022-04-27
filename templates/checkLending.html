@@ -1,0 +1,22 @@
+</div><title>My PokeFiles</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='downloadPage.css')}}">
+<div class="container">
+    <h2 class="titulo">{{session["name"]|capitalize}}'s PC</h2>
+    <form action="/logout" method="POST">
+        <button>Log off</button>
+    </form>
+    {% if session["perms"]>= 0 %}
+    <form action="/checkLending" method="POST">
+        <hr>
+        <p class="joinhr">Want to withdraw files?</p>
+        <button>Download</button>
+    </form>
+    {% endif %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <p>{{msg}}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>

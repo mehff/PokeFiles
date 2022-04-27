@@ -119,7 +119,7 @@ def regMain():
                 "name": name,
                 "perms": 0,
                 "userFolder": encryptedInfo[0],
-                "folderBorrowing": []
+                "folderBorrowing": {encryptedInfo[0]: encryptedInfo[0]}
                 }
                 
             # Check for duplicity
@@ -134,12 +134,6 @@ def regMain():
             # Send to DB
             dbResponse = db.users.insert_one(user)
             dbResponse.inserted_id
-
-            # Create personal user folder
-            userFolder = app.config["USER_FOLDER"]
-            
-            if not os.path.exists(userFolder):
-                os.makedirs(userFolder)
 
             # Visual indication of success
             flash("Account created! Please login now.")
@@ -205,6 +199,13 @@ def loginPage():
                     app.config["USER_FOLDER"] = app.config["FILE_UPLOADS"] + "\\" + value
                 else:
                     session.update({key: value})
+            
+            # Create personal user folder
+            userFolder = app.config["USER_FOLDER"]
+            
+            if not os.path.exists(userFolder):
+                os.makedirs(userFolder)
+                
         except:
             flash("Please insert your username and password")
             return render_template("/login.html", form=form)
@@ -245,7 +246,7 @@ def userArea():
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
-    # try:
+    try:
         if session["perms"] >= 0:
 
             # Get local uploads folder content and save to pathList
@@ -267,8 +268,8 @@ def downloads():
 
         return render_template("downloads.html", pathList=pathList, borrowingPathList=borrowingPathList, borrowingFolder=borrowingFolder)
 
-    # except:
-    #     return render_template("denied.html")
+    except:
+        return render_template("denied.html")
 
 # Download user folder file
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
@@ -321,6 +322,37 @@ def deletefile(deletefilename):
             return render_template("denied.html", pathList=pathList)
     except:
         return render_template("denied.html", pathList=pathList)
+
+# Check lending
+@app.route("/checkLending", methods=["GET", "POST"])
+def checkLending():
+    # try:
+        if session["perms"] >= 2:
+
+            # # Get local uploads folder content and save to pathList
+            # filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
+            print("AROS")
+            data = db.users.find({"folderBorrowing":{"$elemMatch":{"folderBorrowing" : f"{session['username']}"}}})
+            for i in data:
+                print(i)
+            # pathList = []
+            
+            # for i in filenames:
+            #     pathList.append(i)
+
+            # borrowingPathList = []
+            # borrowingFolder = []
+
+            # for i in session["folderBorrowing"]:
+            #     borrowingFolder.append(i)
+            #     borrowedFileNames = next(os.walk(app.config["FILE_UPLOADS"]+f"\\{i}"), (None, None, []))[2]
+            #     for j in borrowedFileNames:
+            #         borrowingPathList.append(j)
+
+            return render_template("checkLending.html", pathList=pathList)
+
+    # except:
+    #     return render_template("denied.html")
 
 # Verify existing files
 def checkExisting(fileName, fileExt, loopCount):

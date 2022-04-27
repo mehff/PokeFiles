@@ -19,22 +19,29 @@
         <button>Download</button>
     </form>
     {% endif %}
+    {% if session["perms"]>= 1 %}
+    <form action="/checkLending" method="POST">
+        <hr>
+        <p class="joinhr">Check to whom you're lending!</p>
+        <button>Lending</button>
+    </form>
+    {% endif %}
     {% if session["perms"] >= 3 %}
-        <form action="/adminChange" method="POST">
-            <hr>
-            <p class="joinhr">Manage Accounts</p>
-            <button>Change'em!</button>
-        </form>
-        <form action="/ngrokOn" method="POST">
-            <hr>
-            <p class="joinhr">Turn on Ngrok</p>
-            <button>Turn it on!</button>
-        </form>
-        <form action="/ngrokOff" method="POST">
-            <hr>
-            <p class="joinhr">Turn ALL Ngrok tunnels off<br>WARNING! You can't turn it on again if you're using the tunnel now.</p>
-            <button>Turn it off!!</button>
-        </form>
+    <form action="/adminChange" method="POST">
+        <hr>
+        <p class="joinhr">Manage Accounts</p>
+        <button>Change'em!</button>
+    </form>
+    <form action="/ngrokOn" method="POST">
+        <hr>
+        <p class="joinhr">Turn on Ngrok</p>
+        <button>Turn it on!</button>
+    </form>
+    <form action="/ngrokOff" method="POST">
+        <hr>
+        <p class="joinhr">Turn ALL Ngrok tunnels off<br>WARNING! You can't turn it on again if you're using the tunnel now.</p>
+        <button>Turn it off!!</button>
+    </form>
     {% endif %}
     {% with messages = get_flashed_messages() %}
         {% if messages %}
