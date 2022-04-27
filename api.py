@@ -118,6 +118,8 @@ def regMain():
                 "email": email,
                 "name": name,
                 "perms": 0,
+                "userFolder": encryptedInfo[0],
+                "folderBorrowing": []
                 }
                 
             # Check for duplicity
@@ -132,6 +134,12 @@ def regMain():
             # Send to DB
             dbResponse = db.users.insert_one(user)
             dbResponse.inserted_id
+
+            # Create personal user folder
+            userFolder = app.config["USER_FOLDER"]
+            
+            if not os.path.exists(userFolder):
+                os.makedirs(userFolder)
 
             # Visual indication of success
             flash("Account created! Please login now.")
@@ -191,6 +199,10 @@ def loginPage():
             for key, value in data.items():
                 if type(value) == ObjectId:
                     session.update({key: str(value)})
+                elif key == "password":
+                    pass
+                elif key == "userFolder":
+                    app.config["USER_FOLDER"] = app.config["FILE_UPLOADS"] + "\\" + value
                 else:
                     session.update({key: value})
         except:
@@ -202,7 +214,6 @@ def loginPage():
             return render_template("/login.html", form=form)
 
         else:
-
             # If db query returns True
             if len(session.items()) != 0:
 
@@ -220,6 +231,13 @@ def loginPage():
 def userArea():
     try:
         if session["perms"] >= 0:
+
+            userFolder = app.config["USER_FOLDER"]
+            
+            # Check if user folder is there
+            if not os.path.exists(userFolder):
+                os.makedirs(userFolder)
+
             return render_template("/userarea.html", ngrokStat=ngrokStat)
     except:
         return render_template("denied.html", )
@@ -227,30 +245,55 @@ def userArea():
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
-    try:
+    # try:
         if session["perms"] >= 0:
 
             # Get local uploads folder content and save to pathList
-            filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
+            filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
             
             pathList = []
-
+            
             for i in filenames:
                 pathList.append(i)
-            
-            return render_template("downloads.html", pathList=pathList)
-    except:
-        return render_template("denied.html")
 
-# Download file
+            borrowingPathList = []
+            borrowingFolder = []
+
+            for i in session["folderBorrowing"]:
+                borrowingFolder.append(i)
+                borrowedFileNames = next(os.walk(app.config["FILE_UPLOADS"]+f"\\{i}"), (None, None, []))[2]
+                for j in borrowedFileNames:
+                    borrowingPathList.append(j)
+
+        return render_template("downloads.html", pathList=pathList, borrowingPathList=borrowingPathList, borrowingFolder=borrowingFolder)
+
+    # except:
+    #     return render_template("denied.html")
+
+# Download user folder file
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
 def downloadfile(filename):
     try:
         if session["perms"] >= 0:
 
             # Return the right file
-            uploads = os.path.join(app.root_path, app.config["FILE_UPLOADS"])
+            uploads = os.path.join(app.root_path, app.config["USER_FOLDER"])
             return send_from_directory(uploads, filename, as_attachment=True)
+        else:
+            return render_template("denied.html")
+    except:
+        return render_template("denied.html")
+
+# Download borrowed folder file
+@app.route("/downloads/download/<path:filepath>/<path:filename>", methods=["GET", "POST"])
+def downloadborrowedfile(filepath, filename):
+    try:
+        if session["perms"] >= 0:
+
+            # Return the right file
+            borrowedUpload = os.path.join(app.root_path, app.config["FILE_UPLOADS"] + f"\\{filepath}")
+            print(borrowedUpload, filename)
+            return send_from_directory(borrowedUpload, filename, as_attachment=True)
         else:
             return render_template("denied.html")
     except:
@@ -263,10 +306,10 @@ def deletefile(deletefilename):
         if session["perms"] >= 2:
 
             # Remove the right file
-            uploads = os.path.join(app.root_path, app.config["FILE_UPLOADS"])
+            uploads = os.path.join(app.root_path, app.config["USER_FOLDER"])
             os.remove(uploads+"/"+deletefilename)
 
-            filenames = next(os.walk(app.config["FILE_UPLOADS"]), (None, None, []))[2]
+            filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
 
             pathList = []
 
@@ -284,13 +327,13 @@ def checkExisting(fileName, fileExt, loopCount):
 
     # Check if file isn't there and if loopCount equals zero
     # Returns unaltered file name
-    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + fileExt))) == False and loopCount == 0:
+    if os.path.exists((os.path.join(app.config["USER_FOLDER"], fileName + fileExt))) == False and loopCount == 0:
         loopCount = loopCount + 1
         return fileName + fileExt
 
     # If the file exists:
     # Returns itself
-    elif os.path.exists((os.path.join(app.config["FILE_UPLOADS"], fileName + "_" + str(loopCount) + fileExt))):
+    elif os.path.exists((os.path.join(app.config["USER_FOLDER"], fileName + "_" + str(loopCount) + fileExt))):
         loopCount = loopCount + 1
         return checkExisting(fileName, fileExt, loopCount)
 
@@ -331,7 +374,7 @@ def upload_file():
                         # If there's files
                         else:
                             uniqueFile = checkExisting(fileName, fileExt, 0)
-                            file.save(os.path.join(app.config["FILE_UPLOADS"], uniqueFile))
+                            file.save(os.path.join(app.config["USER_FOLDER"], uniqueFile))
                             currUploads.append(uniqueFile)
                     flash(f"The following files were uploaded: {currUploads}")
                     return render_template("uploads.html", form=form)
@@ -354,9 +397,8 @@ def adminChange():
             return render_template("/adminEdit.html", data=data)
     except:
         return render_template("/adminEdit.html", data=data)
-        # return render_template("denied.html", session={})
 
-# Admin set perms:
+# Admin delete user:
 @app.route("/adminDelete/<user>", methods=["GET", "POST"])
 def adminDelete(user):
     data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
@@ -409,7 +451,6 @@ def adminUpdate3(user):
         return setPerms(user, 3)
     else:
         return render_template("denied.html")
-
 
 # Ngrok setup
 @app.route("/ngrokOn", methods=["GET", "POST"])

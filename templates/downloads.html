@@ -5,7 +5,7 @@
         <form action="/userarea" method="POST">
             <button>User area</button>
         </form>
-        <p>Available files:</p><br>
+        <p>Your files:</p><br>
         {% for File in pathList %}
         <div class="conjunto" >
 
@@ -21,5 +21,25 @@
             </div>
         </div>
         {% endfor %}
+        {% if borrowingFolder %}
+            <p>Borrowed files:</p><br>
+            {% for Folder in borrowingFolder %}
+                {% for File in borrowingPathList %}
+                <div class="conjunto" >
+
+                    <p>{{File}}</p>
+                    <div>
+                        <a class="elements" href="{{url_for ('downloadborrowedfile', filepath = Folder, filename = File)}}" download="">Download</a>
+                        {% if session["perms"] >= 2 %}
+                            <div>
+                            <a class="elements" href="{{url_for ('deletefile', deletefilename = File)}}">Delete</a>
+                            </div>
+                        {% endif %}
+                        <br>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
     </div>
 </div>
