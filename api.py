@@ -250,6 +250,12 @@ def userArea():
     except:
         return render_template("denied.html", )
 
+# Logout user
+@app.route("/logout", methods=["GET", "POST"])
+def logout():
+    session.clear()
+    return render_template("/landing.html")
+
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
@@ -330,37 +336,6 @@ def deletefile(deletefilename):
     except:
         return render_template("denied.html", pathList=pathList)
 
-# Check lending
-@app.route("/checkLending", methods=["GET", "POST"])
-def checkLending():
-    # try:
-        if session["perms"] >= 2:
-
-            # # Get local uploads folder content and save to pathList
-            # filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
-            print("AROS")
-            data = db.users.find({"folderBorrowing":{"$elemMatch":{"folderBorrowing" : f"{session['username']}"}}})
-            for i in data:
-                print(i)
-            # pathList = []
-            
-            # for i in filenames:
-            #     pathList.append(i)
-
-            # borrowingPathList = []
-            # borrowingFolder = []
-
-            # for i in session["folderBorrowing"]:
-            #     borrowingFolder.append(i)
-            #     borrowedFileNames = next(os.walk(app.config["FILE_UPLOADS"]+f"\\{i}"), (None, None, []))[2]
-            #     for j in borrowedFileNames:
-            #         borrowingPathList.append(j)
-
-            return render_template("checkLending.html", pathList=pathList)
-
-    # except:
-    #     return render_template("denied.html")
-
 # Verify existing files
 def checkExisting(fileName, fileExt, loopCount):
 
@@ -423,6 +398,37 @@ def upload_file():
                     return render_template("uploads.html", form=form)
     except:
         return render_template("denied.html")
+
+# Check lending
+@app.route("/checkLending", methods=["GET", "POST"])
+def checkLending():
+    # try:
+        if session["perms"] >= 2:
+
+            # # Get local uploads folder content and save to pathList
+            # filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
+            print("AROS")
+            data = db.users.find({"folderBorrowing":{"$elemMatch":{"folderBorrowing" : f"{session['username']}"}}})
+            for i in data:
+                print(i)
+            # pathList = []
+            
+            # for i in filenames:
+            #     pathList.append(i)
+
+            # borrowingPathList = []
+            # borrowingFolder = []
+
+            # for i in session["folderBorrowing"]:
+            #     borrowingFolder.append(i)
+            #     borrowedFileNames = next(os.walk(app.config["FILE_UPLOADS"]+f"\\{i}"), (None, None, []))[2]
+            #     for j in borrowedFileNames:
+            #         borrowingPathList.append(j)
+
+            return render_template("checkLending.html", pathList=pathList)
+
+    # except:
+    #     return render_template("denied.html")
 
 # Admin page redirect
 @app.route("/adminChange", methods=["GET", "POST"])
@@ -514,12 +520,6 @@ def ngrokOff():
             return render_template("/userarea.html", ngrokStat=ngrokStat)
     except:
         return render_template("denied.html")
-
-# Logout user
-@app.route("/logout", methods=["GET", "POST"])
-def logout():
-    session.clear()
-    return render_template("/landing.html")
 
 # Run app
 if __name__ == "__main__":
