@@ -119,7 +119,8 @@ def regMain():
                 "name": name,
                 "perms": 0,
                 "userFolder": encryptedInfo[0],
-                "folderBorrowing": {encryptedInfo[0]: encryptedInfo[0]}
+                "folderBorrowing": [],
+                "folderLended": []
                 }
                 
             # Check for duplicity
@@ -197,6 +198,12 @@ def loginPage():
                     pass
                 elif key == "userFolder":
                     app.config["USER_FOLDER"] = app.config["FILE_UPLOADS"] + "\\" + value
+                elif key == "folderBorrowing":
+                    app.config["FOLDER_BORROWING"] = value
+                    print("SOU VALUE DO FOLDERBORROWING!!", type(value))
+                elif key == "folderLended":
+                    app.config["FOLDER_LENDED"] = value
+                    print("SOU VALUE DO FOLDERLENDED!!", type(value))
                 else:
                     session.update({key: value})
             
