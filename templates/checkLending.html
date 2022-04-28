@@ -6,11 +6,35 @@
         <button>Log off</button>
     </form>
     {% if session["perms"]>= 0 %}
-    <form action="/checkLending" method="POST">
-        <hr>
-        <p class="joinhr">Want to withdraw files?</p>
-        <button>Download</button>
+    <form action="/lendToUser" method="post" role="form">
+        <div class="form-group">
+            <label for="name">User to lend to:</label>
+            <input type="lendTo" class="form-control" id="lendTo" name="lendTo" placeholder="User you wanna lend to">
+        </div>
+        <button type="submit" class="btn btn-success">Lend it!</button>
     </form>
+    <form action="/lendToUser" method="POST">
+        <hr>
+        <p class="joinhr">Users you're borrowing from:</p>
+    </form>
+    <div class="conjunto">
+    {% for i in borrowingName %}
+        <p>{{i}}</p>
+    {% endfor %}
+    {% for Folder in folderBorrowing %}
+        <div>
+            <a class="elements" href="{{url_for ('stopBorrowing', userToStopBorrowing = Folder)}}">Stop borrowing</a>
+        </div>
+    {% endfor %}
+    <div class="conjunto">
+    {% for i in lendingName %}
+        <p>{{i}}</p>
+    {% endfor %}
+    {% for Folder in folderLended %}
+        <div>
+            <a class="elements" href="{{url_for ('stopLending', userToStopLending = Folder)}}">Stop borrowing</a>
+        </div>
+    {% endfor %}
     {% endif %}
     {% with messages = get_flashed_messages() %}
         {% if messages %}

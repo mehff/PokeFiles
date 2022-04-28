@@ -59,6 +59,10 @@ class LoginForms(Form):
 class FilesForm(Form):
     files = FileField("Upload files:", validators=[validators.DataRequired()])
 
+# WTForms files
+class LendToForm(Form):
+    lendTo = TextAreaField("Lend to:", validators=[validators.DataRequired()])
+
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 
 # First page
@@ -199,11 +203,11 @@ def loginPage():
                 elif key == "userFolder":
                     app.config["USER_FOLDER"] = app.config["FILE_UPLOADS"] + "\\" + value
                 elif key == "folderBorrowing":
+                    session.update({key: value})
                     app.config["FOLDER_BORROWING"] = value
-                    print("SOU VALUE DO FOLDERBORROWING!!", type(value))
                 elif key == "folderLended":
+                    session.update({key: value})
                     app.config["FOLDER_LENDED"] = value
-                    print("SOU VALUE DO FOLDERLENDED!!", type(value))
                 else:
                     session.update({key: value})
             
@@ -226,7 +230,7 @@ def loginPage():
             if len(session.items()) != 0:
 
                 # Render user's userarea
-                return render_template("/userarea.html", ngrokStat=ngrokStat)
+                return render_template("/userarea.html", ngrokStat=ngrokStat, form=form)
 
             else:
                 # Visual indication of failure
@@ -399,36 +403,115 @@ def upload_file():
     except:
         return render_template("denied.html")
 
-# Check lending
-@app.route("/checkLending", methods=["GET", "POST"])
-def checkLending():
-    # try:
+# Lend to user
+@app.route("/lendToUser", methods=["GET", "POST"])
+def lendToUser():
+    try:
+        if session["perms"] >= 1:
+
+            form = LendToForm(request.form)
+
+            borrowingName = []
+
+            for i in session["folderBorrowing"]:
+                data = db.users.find_one({"username": i})
+                if data:
+                    for k, v in data.items():
+                        if k == "name":
+                            print
+                            borrowingName.append(v)
+                            return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], borrowingName=borrowingName, folderLended=session["folderLended"], form = form)
+                        else:
+                            pass
+                else:
+                    return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], borrowingName=borrowingName, folderLended=session["folderLended"], form = form)
+
+            if form.validate():
+
+                emailToLend = request.form["lendTo"]
+                
+                folderLender = []
+                lenderName = []
+
+                data = db.users.find_one({"email": emailToLend})
+
+                if data:
+                    for k, v in data.items():
+                        if k == "userFolder":
+                            folderLender = v
+                        if k == "folderBorrowing":
+                            db.users.update_one({"username": folderLender}, {"$push": {"folderBorrowing":{session["username"]: session["username"]}}})
+                            session["folderBorrowing"].append(folderLender)
+                        if k == "email":
+                            lenderName = v
+                        else:
+                            pass
+                
+                else:
+                    return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], borrowingName=borrowingName, folderLended=session["folderLended"], form = form)
+
+                data = db.users.update_one({"username": session["username"]}, {"$push": {"folderLended":{folderLender: folderLender}}})
+
+                return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], borrowingName=borrowingName, folderLended=session["folderLended"], lenderName=lenderName, form = form)
+
+
+            else:
+                return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], borrowingName=borrowingName, folderLended=session["folderLended"], form = form)
+
+    except:
+        return render_template("denied.html")
+
+# Stop borrowing
+@app.route("/stopBorrowing/<path:userToStopBorrowing>", methods=["GET", "POST"])
+def stopBorrowing(userToStopBorrowing):
+    try:
         if session["perms"] >= 2:
+            data = db.users.find_one({"username": userToStopBorrowing})
+            if data:
+                for k, v in data.items():
+                    if k == "folderLended":
+                        j = len(v)
+                        while j > 0:
+                            if (v[j-1]) == session["username"]:
+                                # db.users.update_one({"username": userToStopBorrowing}, {"$push": {"folderLended":{v[j-1]: v[j-1]}}})
+                                db.users.update_one({"username": userToStopBorrowing}, {"$pull": {"folderLended":{v[j-1]}}})
+                                j-=1
+                            else:
+                                j-=1
+                    else:
+                        pass
+            else:
+                return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], folderLended=session["folderLended"])
+            return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], folderLended=session["folderLended"])
 
-            # # Get local uploads folder content and save to pathList
-            # filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
-            print("AROS")
-            data = db.users.find({"folderBorrowing":{"$elemMatch":{"folderBorrowing" : f"{session['username']}"}}})
-            for i in data:
-                print(i)
-            # pathList = []
-            
-            # for i in filenames:
-            #     pathList.append(i)
+    except:
+        return render_template("denied.html")
 
-            # borrowingPathList = []
-            # borrowingFolder = []
-
-            # for i in session["folderBorrowing"]:
-            #     borrowingFolder.append(i)
-            #     borrowedFileNames = next(os.walk(app.config["FILE_UPLOADS"]+f"\\{i}"), (None, None, []))[2]
-            #     for j in borrowedFileNames:
-            #         borrowingPathList.append(j)
-
-            return render_template("checkLending.html", pathList=pathList)
-
-    # except:
-    #     return render_template("denied.html")
+# Stop lending:
+@app.route("/stopLending/<path:userToStopLending>")
+def stopLending(userToStopLending):
+    try:
+        if session["perms"] >= 2:
+            data = db.users.find_one({"username": userToStopLending})
+            if data.items():
+                for k, v in data.items():
+                    if k == "folderBorrowing":
+                        j = len(v)
+                        while j > 0:
+                            if (v[j-1]) == userToStopLending:
+                                db.users.update_one({"username": userToStopLending}, {"$push": {"folderBorrowing":{v[j-1]: v[j-1]}}})
+                                db.users.update_one({"username": userToStopLending}, {"$pull": {"folderBorrowing":{v[j-1]: v[j-1]}}})
+                                j-=1
+                            else:
+                                j-=1
+                    else:
+                        pass
+                return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], folderLended=session["folderLended"])
+            else:
+                flash("YOU WHAT MATE")
+                render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], folderLended=session["folderLended"])
+    except:
+        return render_template("denied.html")
 
 # Admin page redirect
 @app.route("/adminChange", methods=["GET", "POST"])

@@ -20,10 +20,10 @@
     </form>
     {% endif %}
     {% if session["perms"]>= 1 %}
-    <form action="/checkLending" method="POST">
+    <form action="/lendToUser" method="POST">
         <hr>
-        <p class="joinhr">Check to whom you're lending!</p>
-        <button>Lending</button>
+        <p class="joinhr">Wanna lend to someone?</p>
+        <button>Add lenders</button>
     </form>
     {% endif %}
     {% if session["perms"] >= 3 %}
