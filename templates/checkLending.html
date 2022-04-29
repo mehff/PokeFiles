@@ -15,25 +15,17 @@
     </form>
     <form action="/lendToUser" method="POST">
         <hr>
-        <p class="joinhr">Users you're borrowing from:</p>
+        <p class="joinhr">Users you're lending to:</p>
     </form>
-    <div class="conjunto">
-    {% for i in borrowingName %}
-        <p>{{i}}</p>
-    {% endfor %}
-    {% for Folder in folderBorrowing %}
-        <div>
-            <a class="elements" href="{{url_for ('stopBorrowing', userToStopBorrowing = Folder)}}">Stop borrowing</a>
-        </div>
-    {% endfor %}
     <div class="conjunto">
     {% for i in lendingName %}
         <p>{{i}}</p>
     {% endfor %}
     {% for Folder in folderLended %}
         <div>
-            <a class="elements" href="{{url_for ('stopLending', userToStopLending = Folder)}}">Stop borrowing</a>
+            <a class="elements" href="{{url_for ('stopLending', userToStopLending = Folder)}}">Stop lending</a>
         </div>
+    </div>
     {% endfor %}
     {% endif %}
     {% with messages = get_flashed_messages() %}

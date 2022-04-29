@@ -23,22 +23,19 @@
         {% endfor %}
         {% if borrowingFolder %}
             <p>Borrowed files:</p><br>
-            {% for Folder in borrowingFolder %}
-                {% for File in borrowingPathList %}
-                <div class="conjunto" >
-
-                    <p>{{File}}</p>
-                    <div>
-                        <a class="elements" href="{{url_for ('downloadborrowedfile', filepath = Folder, filename = File)}}" download="">Download</a>
-                        {% if session["perms"] >= 2 %}
-                            <div>
-                            <a class="elements" href="{{url_for ('deletefile', deletefilename = File)}}">Delete</a>
-                            </div>
-                        {% endif %}
-                        <br>
-                    </div>
+            {% for File in borrowingPathList %}
+            <div class="conjunto" >
+                <p>{{File}}</p>
+                <div>
+                    <a class="elements" href="{{url_for ('downloadborrowedfile', filepath = Folder, filename = File)}}" download="">Download</a>
+                    {% if session["perms"] >= 4 %}
+                        <div>
+                        <a class="elements" href="{{url_for ('deletefile', deletefilename = File)}}">Delete</a>
+                        </div>
+                    {% endif %}
+                    <br>
                 </div>
-                {% endfor %}
+            </div>
             {% endfor %}
         {% endif %}
     </div>
