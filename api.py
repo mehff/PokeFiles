@@ -8,7 +8,7 @@ import shutil
 from pyngrok import ngrok
 from bson import ObjectId
 
-# # # TODO: Find a way to create functions on above routes that apply: tagged with # @&@&
+# # # TODO: Find a way to create functions on routes below that apply: tagged with # @&@&
 # # # TODO: Borrowing and Lending: tagged with # &¨&¨&
 
 # App configuration
@@ -245,7 +245,7 @@ def loginPage():
                 checkShared = os.path.join(app.config["FILE_UPLOADS"] + "\shared")
                 if not os.path.exists(checkShared):
                     os.makedirs(checkShared)
-                    
+
                 # Render user's userarea
                 return render_template("/userarea.html", ngrokStat=ngrokStat, form=form)
 
