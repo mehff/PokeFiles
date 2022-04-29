@@ -241,6 +241,11 @@ def loginPage():
             # If db query returns True
             if len(session.items()) != 0:
 
+                # Check if folder "shared" exists; if not, create it
+                checkShared = os.path.join(app.config["FILE_UPLOADS"] + "\shared")
+                if not os.path.exists(checkShared):
+                    os.makedirs(checkShared)
+                    
                 # Render user's userarea
                 return render_template("/userarea.html", ngrokStat=ngrokStat, form=form)
 
