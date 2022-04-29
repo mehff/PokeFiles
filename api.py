@@ -54,18 +54,19 @@ class newUserForms(Form):
     name = TextAreaField("Name:", validators=[validators.DataRequired()])
 
 # WTForms login
-class LoginForms(Form):
+class loginForms(Form):
     username = TextAreaField("Username:", validators=[validators.DataRequired()])
     password = TextAreaField("Password:", validators=[validators.DataRequired(), validators.Length(min=6, max=35)])
 
 # WTForms files
-class FilesForm(Form):
+class filesForm(Form):
     files = FileField("Upload files:")
     filesShared = FileField("Upload shared files:")
 
-# WTForms files
-class LendToForm(Form):
-    lendTo = TextAreaField("Lend to:", validators=[validators.DataRequired()])
+# # &¨&¨&
+# # WTForms files
+# class lendToForm(Form):
+#     lendTo = TextAreaField("Lend to:", validators=[validators.DataRequired()])
 
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
 app.config["PATHLIST"] = []
@@ -159,7 +160,7 @@ def regMain():
 # Login page
 @app.route("/loginPage", methods = ["GET", "POST"])
 def getLogin():
-    form = LoginForms(request.form)
+    form = loginForms(request.form)
     return render_template("/login.html", form=form)
 
 # Login user
@@ -170,7 +171,7 @@ def loginPage():
     if request.method == "POST":
 
         # Select WTForms format
-        form = LoginForms(request.form)
+        form = loginForms(request.form)
 
         # Check if form has info
         try:
@@ -336,14 +337,14 @@ def downloadShared(filename):
         
 # Remove file
 # @&@&
-@app.route("/downloads/delete/<path:deletefilename>", methods=["GET", "POST"])
-def deletefile(deletefilename):
+@app.route("/downloads/delete/<path:deleteFileName>", methods=["GET", "POST"])
+def deleteFile(deleteFileName):
     try:
         if session["perms"] >= 2:
 
             # Remove the right file
             uploads = os.path.join(app.root_path, app.config["USER_FOLDER"])
-            os.remove(uploads+"/"+deletefilename)
+            os.remove(uploads+"/"+deleteFileName)
 
             # Walk through files to get the ones that weren't deleted
             filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
@@ -366,14 +367,14 @@ def deletefile(deletefilename):
 
 # Remove shared file
 # @&@&
-@app.route("/downloads/deleteShared/<path:deletefilename>", methods=["GET", "POST"])
-def deleteShared(deletefilename):
+@app.route("/downloads/deleteShared/<path:deleteFileName>", methods=["GET", "POST"])
+def deleteShared(deleteFileName):
     try:
         if session["perms"] >= 2:
 
             # Remove the right file
             uploads = os.path.join(app.root_path, app.config["FILE_UPLOADS"] + "\shared")
-            os.remove(uploads+"/"+deletefilename)
+            os.remove(uploads+"/"+deleteFileName)
 
             # Walk through files to get the ones that weren't deleted
             filenames = next(os.walk(app.config["FILE_UPLOADS"] + "\shared"), (None, None, []))[2]
@@ -436,7 +437,7 @@ def checkExistingShared(fileName, fileExt, loopCount):
 
 # Upload files
 # @&@&
-@app.route("/upload-file", methods = ["GET", "POST"])
+@app.route("/uploadFile", methods = ["GET", "POST"])
 def upload_file():
 
     try:
@@ -446,7 +447,7 @@ def upload_file():
             if request.method == "POST":
                 
                 # Select wtforms method
-                form = FilesForm(request.form)
+                form = filesForm(request.form)
 
                 # If there's files
                 if request.files:
@@ -486,7 +487,7 @@ def upload_file():
 
 # Upload shared files
 # @&@&
-@app.route("/upload-Shared", methods = ["GET", "POST"])
+@app.route("/uploadShared", methods = ["GET", "POST"])
 def upload_Shared():
 
     try:
@@ -496,7 +497,7 @@ def upload_Shared():
             if request.method == "POST":
                 
                 # Select wtforms method
-                form = FilesForm(request.form)
+                form = filesForm(request.form)
 
                 # If there's files
                 if request.files:
@@ -662,7 +663,7 @@ def ngrokOff():
 #     try:
 #         if session["perms"] >= 1:
 
-#             form = LendToForm(request.form)
+#             form = lendToForm(request.form)
 
 #             borrowingName = []
 

@@ -14,7 +14,7 @@
                 <a class="elements" href="{{url_for ('downloadfile', filename = File)}}" download="">Download</a>
                 {% if session["perms"] >= 2 %}
                     <div>
-                    <a class="elements" href="{{url_for ('deletefile', deletefilename = File)}}">Delete</a>
+                    <a class="elements" href="{{url_for ('deleteFile', deleteFileName = File)}}">Delete</a>
                     </div>
                 {% endif %}
                 <br>
@@ -31,7 +31,7 @@
                 <a class="elements" href="{{url_for ('downloadShared', filename = File)}}" download="">Download</a>
                 {% if session["perms"] >= 2 %}
                     <div>
-                    <a class="elements" href="{{url_for ('deleteShared', deletefilename = File)}}">Delete</a>
+                    <a class="elements" href="{{url_for ('deleteShared', deleteFileName = File)}}">Delete</a>
                     </div>
                 {% endif %}
                 <br>
