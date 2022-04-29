@@ -21,11 +21,11 @@
         <p>Email: {{data["email"]}}<br>Perms: {{data["perms"]}}<br>
             <br>
             <label for="perms">Change to:</label><br>
-            <a class="elements-perm" href="{{url_for ('adminUpdate0', user = data['_id'])}}">Perms 0</a>
-            <a class="elements-perm" href="{{url_for ('adminUpdate1', user = data['_id'])}}">Perms 1</a>
-            <a class="elements-perm" href="{{url_for ('adminUpdate2', user = data['_id'])}}">Perms 2</a>
+            <a class="elements-perm" href="{{url_for ('adminUpdate0', user = data['username'])}}">Perms 0</a>
+            <a class="elements-perm" href="{{url_for ('adminUpdate1', user = data['username'])}}">Perms 1</a>
+            <a class="elements-perm" href="{{url_for ('adminUpdate2', user = data['username'])}}">Perms 2</a>
             {% if session["perms"] == 4 %}
-                <a class="elements-perm" href="{{url_for ('adminUpdate3', user = data['_id'])}}">Perms 3</a>
+                <a class="elements-perm" href="{{url_for ('adminUpdate3', user = data['username'])}}">Perms 3</a>
             {% endif %}
             <a class="elements-perm" href="{{url_for ('adminDelete', user = data['username'])}}">Delete</a>
         </p>
