@@ -19,7 +19,7 @@
         <button>Download</button>
     </form>
     {% endif %}
-    {% if session["perms"]>= 1 %}
+    {% if session["perms"]>= 5 %}
     <form action="/lendToUser" method="POST">
         <hr>
         <p class="joinhr">Wanna lend to someone?</p>
