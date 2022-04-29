@@ -245,7 +245,7 @@ def loginPage():
 # User area
 @app.route("/userarea", methods=["GET", "POST"])
 def userArea():
-    # try:
+    try:
         if session["perms"] >= 0:
             
             print(app.config["USER_FOLDER"])
@@ -257,8 +257,8 @@ def userArea():
                 os.makedirs(userFolder)
 
             return render_template("/userarea.html", ngrokStat=ngrokStat)
-    # except:
-    #     return render_template("denied.html", )
+    except:
+        return render_template("denied.html", )
 
 # Logout user
 @app.route("/logout", methods=["GET", "POST"])
@@ -269,7 +269,7 @@ def logout():
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
-    # try:
+    try:
         if session["perms"] >= 0:
 
             # Get local uploads folder content and save to pathList
@@ -298,8 +298,8 @@ def downloads():
 
         return render_template("downloads.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
 
-    # except:
-    #     return render_template("denied.html")
+    except:
+        return render_template("denied.html")
 
 # Download user folder file
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
@@ -613,7 +613,6 @@ def upload_Shared():
 #                         pass
 #                 return render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], folderLended=session["folderLended"])
 #             else:
-#                 flash("YOU WHAT MATE")
 #                 render_template("checkLending.html", folderBorrowing=session["folderBorrowing"], folderLended=session["folderLended"])
 #     except:
 #         return render_template("denied.html")
