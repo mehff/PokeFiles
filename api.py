@@ -4,6 +4,7 @@ from wtforms import Form, TextAreaField, TextAreaField, validators, FileField
 import pymongo
 import pathlib
 import os
+import shutil
 from pyngrok import ngrok
 from bson import ObjectId
 
@@ -208,19 +209,20 @@ def loginPage():
                     session.update({key: str(value)})
                 elif key == "password":
                     pass
+                elif key == "perms":
+                    session.update({key: value})
                 elif key == "userFolder":
                     app.config["USER_FOLDER"] = app.config["FILE_UPLOADS"] + "\\" + value
-
-                # # Part of future Borrowing/Lending functionality
+                # Part of future Borrowing/Lending functionality
                 # &¨&¨&
-                # elif key == "folderBorrowing":
-                #     session.update({key: value})
-                #     app.config["FOLDER_BORROWING"] = value
-                # elif key == "folderLended":
-                #     session.update({key: value})
-                #     app.config["FOLDER_LENDED"] = value
-                # else:
-                #     session.update({key: value})
+                elif key == "folderBorrowing":
+                    session.update({key: value})
+                    app.config["FOLDER_BORROWING"] = value
+                elif key == "folderLended":
+                    session.update({key: value})
+                    app.config["FOLDER_LENDED"] = value
+                else:
+                    session.update({key: value})
             
             # Create personal user folder if it's not there
             userFolder = app.config["USER_FOLDER"]
@@ -559,23 +561,22 @@ def adminChange():
 def adminDelete(user):
     data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
 
-    # Convert _id str to ObjectId
-    oid = ObjectId(user)
-
     # Apply changes
-    db.users.delete_one({"_id":oid})
+    db.users.delete_one({"username":user})
+
+    # Remove personal user folder if it's there
+    toDelete = os.path.join(app.config["FILE_UPLOADS"] + f"\{user}")
+    if os.path.exists(toDelete):
+        shutil.rmtree(toDelete)
+
     return render_template("/adminEdit.html", data=data)
 
 # Admin set perms:
 def setPerms(user, futurePerms):
     data = db.users.find({"perms" : {"$gte":0,"$lte":3}})
 
-    # Convert _id str to ObjectId
-    oid_str = user
-    oid = ObjectId(oid_str)
-
     # Apply changes
-    userToUpdate = {"_id":oid}
+    userToUpdate = {"username":user}
     updateTo = {"$set":{"perms":futurePerms}}
     db.users.update_one(userToUpdate, updateTo)
     return render_template("/adminEdit.html", data=data)

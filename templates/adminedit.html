@@ -27,7 +27,7 @@
             {% if session["perms"] == 4 %}
                 <a class="elements-perm" href="{{url_for ('adminUpdate3', user = data['_id'])}}">Perms 3</a>
             {% endif %}
-            <a class="elements-perm" href="{{url_for ('adminDelete', user = data['_id'])}}">Delete</a>
+            <a class="elements-perm" href="{{url_for ('adminDelete', user = data['username'])}}">Delete</a>
         </p>
         </div>
         {% endfor %}
