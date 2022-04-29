@@ -7,6 +7,9 @@ import os
 from pyngrok import ngrok
 from bson import ObjectId
 
+# # # TODO: Find a way to create functions on above routes that apply: tagged with # @&@&
+# # # TODO: Borrowing and Lending: tagged with # &¨&¨&
+
 # App configuration
 DEBUG = True
 app = Flask(__name__)
@@ -651,8 +654,8 @@ def ngrokOff():
             return render_template("/userarea.html", ngrokStat=ngrokStat)
     except:
         return render_template("denied.html")
-# # # TODO: Find a way to create functions on above routes that apply: tagged with # @&@&
-# # # TODO: Borrowing and Lending: tagged with # &¨&¨&
+
+# # &¨&¨&
 # # Lend to user
 # @app.route("/lendToUser", methods=["GET", "POST"])
 # def lendToUser():
