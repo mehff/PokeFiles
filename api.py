@@ -57,13 +57,17 @@ class LoginForms(Form):
 
 # WTForms files
 class FilesForm(Form):
-    files = FileField("Upload files:", validators=[validators.DataRequired()])
+    files = FileField("Upload files:")
+    filesShared = FileField("Upload shared files:")
 
 # WTForms files
 class LendToForm(Form):
     lendTo = TextAreaField("Lend to:", validators=[validators.DataRequired()])
 
 app.config["FILE_UPLOADS"] = str(pathlib.Path().resolve()) + "\\uploads"
+app.config["PATHLIST"] = []
+app.config["SHARED_PATHLIST"] = []
+
 
 # First page
 @app.route("/", methods = ["GET", "POST"])
@@ -241,8 +245,10 @@ def loginPage():
 # User area
 @app.route("/userarea", methods=["GET", "POST"])
 def userArea():
-    try:
+    # try:
         if session["perms"] >= 0:
+            
+            print(app.config["USER_FOLDER"])
 
             userFolder = app.config["USER_FOLDER"]
             
@@ -251,8 +257,8 @@ def userArea():
                 os.makedirs(userFolder)
 
             return render_template("/userarea.html", ngrokStat=ngrokStat)
-    except:
-        return render_template("denied.html", )
+    # except:
+    #     return render_template("denied.html", )
 
 # Logout user
 @app.route("/logout", methods=["GET", "POST"])
@@ -263,30 +269,37 @@ def logout():
 # Download page
 @app.route("/downloads", methods=["GET", "POST"])
 def downloads():
-    try:
+    # try:
         if session["perms"] >= 0:
 
             # Get local uploads folder content and save to pathList
             filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
             
+            app.config["PATHLIST"].clear()
+
             pathList = []
             
             for i in filenames:
                 pathList.append(i)
+                app.config["PATHLIST"].append(i)
 
-            borrowingPathList = []
-            borrowingFolder = []
+            sharedFilenames = next(os.walk(app.config["FILE_UPLOADS"] + "\shared"), (None, None, []))[2]
 
-            for i in session["folderBorrowing"]:
-                borrowingFolder.append(i)
-                borrowedFileNames = next(os.walk(app.config["FILE_UPLOADS"]+f"\\{i}"), (None, None, []))[2]
-                for j in borrowedFileNames:
-                    borrowingPathList.append(j)
+            app.config["SHARED_PATHLIST"].clear()
 
-        return render_template("downloads.html", pathList=pathList, borrowingPathList=borrowingPathList, borrowingFolder=borrowingFolder)
+            sharedPathList = []
 
-    except:
-        return render_template("denied.html")
+            for i in sharedFilenames:
+                sharedPathList.append(i)
+                app.config["SHARED_PATHLIST"].append(i)
+
+            print(app.config["SHARED_PATHLIST"])
+            print(app.config["PATHLIST"])
+
+        return render_template("downloads.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
+
+    # except:
+    #     return render_template("denied.html")
 
 # Download user folder file
 @app.route("/downloads/download/<path:filename>", methods=["GET", "POST"])
@@ -302,21 +315,20 @@ def downloadfile(filename):
     except:
         return render_template("denied.html")
 
-# Download borrowed folder file
-@app.route("/downloads/download/<path:filepath>/<path:filename>", methods=["GET", "POST"])
-def downloadborrowedfile(filepath, filename):
+# Download user folder file
+@app.route("/downloads/downloadShared/<path:filename>", methods=["GET", "POST"])
+def downloadShared(filename):
     try:
         if session["perms"] >= 0:
 
             # Return the right file
-            borrowedUpload = os.path.join(app.root_path, app.config["FILE_UPLOADS"] + f"\\{filepath}")
-            print(borrowedUpload, filename)
-            return send_from_directory(borrowedUpload, filename, as_attachment=True)
+            uploads = os.path.join(app.root_path, app.config["FILE_UPLOADS"] + "\shared")
+            return send_from_directory(uploads, filename, as_attachment=True)
         else:
             return render_template("denied.html")
     except:
         return render_template("denied.html")
-
+        
 # Remove file
 @app.route("/downloads/delete/<path:deletefilename>", methods=["GET", "POST"])
 def deletefile(deletefilename):
@@ -329,16 +341,45 @@ def deletefile(deletefilename):
 
             filenames = next(os.walk(app.config["USER_FOLDER"]), (None, None, []))[2]
 
+            app.config["PATHLIST"].clear()
+
             pathList = []
 
             for i in filenames:
                 pathList.append(i)
-                
-            return render_template("downloads.html", pathList=pathList)
+                app.config["PATHLIST"].append(i)
+
+            return render_template("downloads.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
         else:
-            return render_template("denied.html", pathList=pathList)
+            return render_template("denied.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
     except:
-        return render_template("denied.html", pathList=pathList)
+        return render_template("denied.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
+
+# Remove shared file
+@app.route("/downloads/deleteShared/<path:deletefilename>", methods=["GET", "POST"])
+def deleteShared(deletefilename):
+    try:
+        if session["perms"] >= 2:
+
+            # Remove the right file
+            uploads = os.path.join(app.root_path, app.config["FILE_UPLOADS"] + "\shared")
+            os.remove(uploads+"/"+deletefilename)
+
+            filenames = next(os.walk(app.config["FILE_UPLOADS"] + "\shared"), (None, None, []))[2]
+
+            app.config["SHARED_PATHLIST"].clear()
+
+            sharedPathList = []
+
+            for i in filenames:
+                sharedPathList.append(i)
+                app.config["SHARED_PATHLIST"].append(i)
+                
+            return render_template("downloads.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
+        else:
+            return render_template("denied.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
+    except:
+        return render_template("denied.html", pathList=app.config["PATHLIST"], sharedPathList=app.config["SHARED_PATHLIST"])
 
 # Verify existing files
 def checkExisting(fileName, fileExt, loopCount):
@@ -352,6 +393,25 @@ def checkExisting(fileName, fileExt, loopCount):
     # If the file exists:
     # Returns itself
     elif os.path.exists((os.path.join(app.config["USER_FOLDER"], fileName + "_" + str(loopCount) + fileExt))):
+        loopCount = loopCount + 1
+        return checkExisting(fileName, fileExt, loopCount)
+
+    # Returns altered name for each file that respects the conditions
+    else:
+        return fileName + "_" + str(loopCount) + fileExt
+
+# Verify existing files on Shared
+def checkExistingShared(fileName, fileExt, loopCount):
+
+    # Check if file isn't there and if loopCount equals zero
+    # Returns unaltered file name
+    if os.path.exists((os.path.join(app.config["FILE_UPLOADS"] + "\shared", fileName + fileExt))) == False and loopCount == 0:
+        loopCount = loopCount + 1
+        return fileName + fileExt
+
+    # If the file exists:
+    # Returns itself
+    elif os.path.exists((os.path.join(app.config["FILE_UPLOADS"] + "\shared", fileName + "_" + str(loopCount) + fileExt))):
         loopCount = loopCount + 1
         return checkExisting(fileName, fileExt, loopCount)
 
@@ -403,6 +463,51 @@ def upload_file():
     except:
         return render_template("denied.html")
 
+# Upload files
+@app.route("/upload-Shared", methods = ["GET", "POST"])
+def upload_Shared():
+
+    # try:
+        if session["perms"] >= 1:
+
+        # If request method is POST
+            if request.method == "POST":
+                
+                # Select wtforms method
+                form = FilesForm(request.form)
+
+                # If there's files
+                if request.files:
+                    
+                    # User feedback
+                    currUploads = []
+
+                    # Get files
+                    files = request.files.getlist("file")
+                    for file in files:
+
+                        fileName, fileExt = os.path.splitext(file.filename)
+
+                        # Check if button is pressed without selecting files
+                        if fileName == "" or fileExt == "":
+                            flash("There's nothing to upload!")
+                            return render_template("uploads.html", form=form)
+
+                        # If there's files
+                        else:
+                            uniqueFile = checkExistingShared(fileName, fileExt, 0)
+                            file.save(os.path.join(app.config["FILE_UPLOADS"] + "\shared", uniqueFile))
+                            currUploads.append(uniqueFile)
+                    flash(f"The following files were uploaded to Shared: {currUploads}")
+                    return render_template("uploads.html", form=form)
+                else:
+                    flash("There's nothing to upload!")
+                    # If there's no files
+                    return render_template("uploads.html", form=form)
+    # except:
+    #     return render_template("denied.html")
+
+# # # TODO: Borrowing and Lending
 # # Lend to user
 # @app.route("/lendToUser", methods=["GET", "POST"])
 # def lendToUser():

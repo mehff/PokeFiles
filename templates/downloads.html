@@ -21,5 +21,22 @@
             </div>
         </div>
         {% endfor %}
+        </form>
+        <p>Shared files:</p><br>
+        {% for File in sharedPathList %}
+        <div class="conjunto" >
+
+            <p>{{File}}</p>
+            <div>
+                <a class="elements" href="{{url_for ('downloadShared', filename = File)}}" download="">Download</a>
+                {% if session["perms"] >= 2 %}
+                    <div>
+                    <a class="elements" href="{{url_for ('deleteShared', deletefilename = File)}}">Delete</a>
+                    </div>
+                {% endif %}
+                <br>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>

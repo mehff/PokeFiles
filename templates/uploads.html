@@ -6,17 +6,27 @@
     <form action="/userarea" method="POST">
         <button>User Area</button>
     </form>
+    <p>Upload to Your Folder</p>
     <form action = "/upload-file" method = "POST" enctype = "multipart/form-data">
         <div class = "custom-file">
             <label class = "custom-file-label" for = "image"><input type="file" name = "file" id = "file" multiple = "true" /> </label>
         </div>
         <button type="submit">Upload file...</button>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for msg in messages %}
-                    <p>{{msg}}</p>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
     </form>
+    <hr>
+    <p>Upload to Shared</p>
+    <form action = "/upload-Shared" method = "POST" enctype = "multipart/form-data">
+        <div class = "custom-file">  
+            <label class = "custom-file-label" for = "image"><input type="file" name = "file" id = "file" multiple = "true" /> </label>
+        </div>
+        <button type="submit">Upload file...</button>
+    </form>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <p>{{msg}}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 </div>
